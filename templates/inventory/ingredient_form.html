@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if ingredient %}Edit{% else %}Add{% endif %} Ingredient - Cookie Manager
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">{% if ingredient %}Edit{% else %}Add{% endif %} Ingredient</h1>
+    <a href="{{ url_for('inventory.list_ingredients') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Ingredients
+    </a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Ingredient Details</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('inventory.edit_ingredient', ingredient_id=ingredient.id) if ingredient else url_for('inventory.add_ingredient') }}" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="name" class="form-label required-field">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required value="{{ ingredient.name if ingredient else '' }}">
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="default_unit" class="form-label required-field">Default Unit</label>
+                            <select class="form-select" id="default_unit" name="default_unit" required>
+                                <option value="g" {% if ingredient and ingredient.default_unit == 'g' %}selected{% endif %}>Grams (g)</option>
+                                <option value="kg" {% if ingredient and ingredient.default_unit == 'kg' %}selected{% endif %}>Kilograms (kg)</option>
+                                <option value="ml" {% if ingredient and ingredient.default_unit == 'ml' %}selected{% endif %}>Milliliters (ml)</option>
+                                <option value="l" {% if ingredient and ingredient.default_unit == 'l' %}selected{% endif %}>Liters (l)</option>
+                                <option value="pcs" {% if ingredient and ingredient.default_unit == 'pcs' %}selected{% endif %}>Pieces (pcs)</option>
+                                <option value="tsp" {% if ingredient and ingredient.default_unit == 'tsp' %}selected{% endif %}>Teaspoon (tsp)</option>
+                                <option value="tbsp" {% if ingredient and ingredient.default_unit == 'tbsp' %}selected{% endif %}>Tablespoon (tbsp)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="default_price_per_unit_cents" class="form-label">Default Price (per unit)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" step="0.01" min="0" class="form-control" id="default_price_dollars" 
+                                       value="{{ (ingredient.default_price_per_unit_cents / 100) if ingredient and ingredient.default_price_per_unit_cents else '' }}">
+                                <input type="hidden" id="default_price_per_unit_cents" name="default_price_per_unit_cents" 
+                                       value="{{ ingredient.default_price_per_unit_cents if ingredient else '' }}">
+                            </div>
+                            <div class="form-text">Default price per {{ '{{unit}}' }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="low_stock_threshold" class="form-label">Low Stock Threshold</label>
+                        <div class="input-group">
+                            <input type="number" step="0.1" min="0" class="form-control" id="low_stock_threshold" name="low_stock_threshold" 
+                                   value="{{ ingredient.low_stock_threshold if ingredient else '0' }}">
+                            <span class="input-group-text unit-label">{{ ingredient.default_unit if ingredient else 'units' }}</span>
+                        </div>
+                        <div class="form-text">You'll be alerted when stock falls below this level</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Image</label>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        <div class="form-text">Upload an image of the ingredient (optional)</div>
+                        
+                        {% if ingredient and ingredient.image_path %}
+                        <div class="mt-2">
+                            <label class="form-label">Current Image:</label>
+                            <div>
+                                <img src="{{ url_for('static_files', filename=ingredient.image_path) }}" alt="{{ ingredient.name }}" 
+                                     class="img-thumbnail" style="max-height: 150px;">
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3">{{ ingredient.notes if ingredient else '' }}</textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('inventory.list_ingredients') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if ingredient %}Update{% else %}Add{% endif %} Ingredient
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Tips</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    Be consistent with units for accurate recipe costing.
+                </div>
+                
+                <h6>Common Units:</h6>
+                <ul>
+                    <li><strong>g</strong> - Grams (weight)</li>
+                    <li><strong>kg</strong> - Kilograms (weight)</li>
+                    <li><strong>ml</strong> - Milliliters (volume)</li>
+                    <li><strong>l</strong> - Liters (volume)</li>
+                    <li><strong>pcs</strong> - Pieces (count)</li>
+                    <li><strong>tsp</strong> - Teaspoon</li>
+                    <li><strong>tbsp</strong> - Tablespoon</li>
+                </ul>
+                
+                <h6>Pricing:</h6>
+                <p>Setting default prices helps calculate recipe costs automatically.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle dollars to cents conversion
+    const priceDollarsInput = document.getElementById('default_price_dollars');
+    const priceCentsInput = document.getElementById('default_price_per_unit_cents');
+    
+    priceDollarsInput.addEventListener('input', function() {
+        const dollars = parseFloat(this.value) || 0;
+        const cents = Math.round(dollars * 100);
+        priceCentsInput.value = cents;
+    });
+    
+    // Update unit label when default unit changes
+    const unitSelect = document.getElementById('default_unit');
+    const unitLabels = document.querySelectorAll('.unit-label');
+    
+    unitSelect.addEventListener('change', function() {
+        const selectedUnit = this.value;
+        unitLabels.forEach(label => {
+            label.textContent = selectedUnit;
+        });
+        
+        // Update price label
+        const priceHelp = document.querySelector('#default_price_dollars + .input-group + .form-text');
+        if (priceHelp) {
+            priceHelp.textContent = `Default price per ${selectedUnit}`;
+        }
+    });
+    
+    // Initialize
+    priceDollarsInput.dispatchEvent(new Event('input'));
+    unitSelect.dispatchEvent(new Event('change'));
+});
+</script>
+{% endblock %}

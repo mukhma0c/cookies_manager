@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}Ingredients - Cookie Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">Ingredients</h1>
+    <a href="{{ url_for('inventory.add_ingredient') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Add Ingredient
+    </a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="card">
+    <div class="card-header bg-white">
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" id="ingredientSearch" class="form-control" placeholder="Search ingredients...">
+        </div>
+    </div>
+    <div class="card-body">
+        {% if ingredients %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="ingredientCards">
+                {% for ingredient in ingredients %}
+                    <div class="col">
+                        <div class="card h-100 card-hover">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">{{ ingredient.name }}</h5>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('inventory.edit_ingredient', ingredient_id=ingredient.id) }}">
+                                                <i class="bi bi-pencil me-2"></i> Edit
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteIngredientModal{{ ingredient.id }}">
+                                                <i class="bi bi-trash me-2"></i> Delete
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-center align-items-center" style="height: 160px; overflow: hidden;">
+                                {% if ingredient.image_path %}
+                                    <img src="{{ url_for('static_files', filename=ingredient.image_path) }}" alt="{{ ingredient.name }}" class="img-fluid" style="max-height: 160px; object-fit: contain;">
+                                {% else %}
+                                    <div class="text-center text-muted">
+                                        <i class="bi bi-image" style="font-size: 3rem;"></i>
+                                        <p>No Image</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <small class="text-muted">Default Unit:</small>
+                                    <p class="mb-0">{{ ingredient.default_unit }}</p>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted">Default Price:</small>
+                                    <p class="mb-0">${{ (ingredient.default_price_per_unit_cents / 100) | round(2) }} per {{ ingredient.default_unit }}</p>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Low Stock Threshold:</small>
+                                    <p class="mb-0">{{ ingredient.low_stock_threshold }} {{ ingredient.default_unit }}</p>
+                                </div>
+                                {% if ingredient.notes %}
+                                    <div class="mt-2 pt-2 border-top">
+                                        <small class="text-muted">Notes:</small>
+                                        <p class="mb-0 small">{{ ingredient.notes | truncate(100) }}</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Delete Modal -->
+                    <div class="modal fade" id="deleteIngredientModal{{ ingredient.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Confirm Delete</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Are you sure you want to delete <strong>{{ ingredient.name }}</strong>?</p>
+                                    <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <form action="{{ url_for('inventory.delete_ingredient', ingredient_id=ingredient.id) }}" method="post">
+                                        <button type="submit" class="btn btn-danger">Delete Ingredient</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-cart-x" style="font-size: 3rem;"></i>
+                <h3 class="mt-3">No ingredients found</h3>
+                <p class="text-muted">Add your first ingredient to get started.</p>
+                <a href="{{ url_for('inventory.add_ingredient') }}" class="btn btn-primary mt-2">
+                    <i class="bi bi-plus-lg"></i> Add Ingredient
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Simple search functionality
+    const searchInput = document.getElementById('ingredientSearch');
+    const cards = document.querySelectorAll('#ingredientCards .col');
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        cards.forEach(card => {
+            const title = card.querySelector('.card-title').textContent.toLowerCase();
+            const isVisible = title.includes(searchTerm);
+            card.style.display = isVisible ? '' : 'none';
+        });
+    });
+});
+</script>
+{% endblock %}

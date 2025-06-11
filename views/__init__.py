@@ -7,6 +7,8 @@ def register_blueprints(app):
     """
     from views.dashboard import dashboard_bp
     from views.orders import orders_bp
+    from views.inventory import inventory_bp
     
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(orders_bp)
+    app.register_blueprint(inventory_bp)
