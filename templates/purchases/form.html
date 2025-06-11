@@ -133,9 +133,9 @@ document.addEventListener('DOMContentLoaded', function() {
         {% for ingredient in ingredients %}
             {
                 id: {{ ingredient.id }},
-                name: "{{ ingredient.name }}",
+                name: "{{ ingredient.name|tojson|safe }}",
                 default_unit: "{{ ingredient.default_unit }}"
-            },
+            }{% if not loop.last %},{% endif %}
         {% endfor %}
     ];
     
@@ -143,9 +143,9 @@ document.addEventListener('DOMContentLoaded', function() {
         {% for item in packaging_items %}
             {
                 id: {{ item.id }},
-                name: "{{ item.name }}",
+                name: "{{ item.name|tojson|safe }}",
                 default_unit: "{{ item.default_unit }}"
-            },
+            }{% if not loop.last %},{% endif %}
         {% endfor %}
     ];
     
