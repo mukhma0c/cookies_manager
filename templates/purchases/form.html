@@ -31,7 +31,7 @@
                 <form action="{{ url_for('purchases.edit_purchase', purchase_id=purchase.id) if purchase else url_for('purchases.add_purchase') }}" method="post">
                     <div class="mb-3">
                         <label for="item_type" class="form-label required-field">Item Type</label>
-                        <select class="form-select" id="item_type" name="item_type" required onchange="updateItemSelect()">
+                        <select class="form-select" id="item_type" name="item_type" required>
                             <option value="ingredient" {% if purchase and purchase.item_type == 'ingredient' %}selected{% endif %}>Ingredient</option>
                             <option value="packaging" {% if purchase and purchase.item_type == 'packaging' %}selected{% endif %}>Packaging</option>
                         </select>
@@ -127,28 +127,29 @@
 
 {% block scripts %}
 <script>
+// Store all items for selection
+const ingredients = [
+    {% for ingredient in ingredients %}
+        {
+            id: {{ ingredient.id }},
+            name: "{{ ingredient.name|tojson|safe }}",
+            default_unit: "{{ ingredient.default_unit }}"
+        }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+const packaging = [
+    {% for item in packaging_items %}
+        {
+            id: {{ item.id }},
+            name: "{{ item.name|tojson|safe }}",
+            default_unit: "{{ item.default_unit }}"
+        }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Store all items for selection
-    const ingredients = [
-        {% for ingredient in ingredients %}
-            {
-                id: {{ ingredient.id }},
-                name: "{{ ingredient.name|tojson|safe }}",
-                default_unit: "{{ ingredient.default_unit }}"
-            }{% if not loop.last %},{% endif %}
-        {% endfor %}
-    ];
-    
-    const packaging = [
-        {% for item in packaging_items %}
-            {
-                id: {{ item.id }},
-                name: "{{ item.name|tojson|safe }}",
-                default_unit: "{{ item.default_unit }}"
-            }{% if not loop.last %},{% endif %}
-        {% endfor %}
-    ];
-    
     // Initialize form
     updateItemSelect();
     
@@ -172,6 +173,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Register function to update unit when item changes
     document.getElementById('item_id').addEventListener('change', updateDefaultUnit);
+    
+    // Register change event for item type select
+    document.getElementById('item_type').addEventListener('change', updateItemSelect);
 });
 
 function updateItemSelect() {
