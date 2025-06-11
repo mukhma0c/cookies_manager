@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Latest Costs - Cookie Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">Latest Item Costs</h1>
+    <div>
+        <a href="{{ url_for('purchases.list_purchases') }}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left"></i> Back to Purchases
+        </a>
+        <a href="{{ url_for('purchases.add_purchase') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Log Purchase
+        </a>
+    </div>
+</div>
+
+<!-- Ingredients Table -->
+<div class="card mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Ingredient Costs</h5>
+        <a href="{{ url_for('inventory.list_ingredients') }}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-list"></i> Manage Ingredients
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Ingredient</th>
+                        <th>Unit</th>
+                        <th>Latest Cost</th>
+                        <th>Default Cost</th>
+                        <th>Last Purchase</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if ingredient_costs %}
+                        {% for entry in ingredient_costs %}
+                            <tr>
+                                <td>{{ entry.item.name }}</td>
+                                <td>{{ entry.item.default_unit }}</td>
+                                <td>
+                                    {% if entry.latest_purchase %}
+                                        <strong>${{ (entry.unit_cost_cents / 100)|round(4) }}</strong> per {{ entry.item.default_unit }}
+                                    {% else %}
+                                        <span class="text-muted">No purchase data</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if entry.item.default_price_per_unit_cents %}
+                                        ${{ (entry.item.default_price_per_unit_cents / 100)|round(4) }} per {{ entry.item.default_unit }}
+                                    {% else %}
+                                        <span class="text-muted">Not set</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if entry.last_purchase_date %}
+                                        {{ entry.last_purchase_date.strftime('%Y-%m-%d') }}
+                                        <span class="badge bg-{{ 'success' if (entry.last_purchase_date - now().date()).days > -90 else 'warning' }}">
+                                            {{ ((now().date() - entry.last_purchase_date).days) }} days ago
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">Never</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <div class="empty-state">
+                                    <i class="bi bi-cart-x"></i>
+                                    <h5>No Ingredient Costs Found</h5>
+                                    <p class="text-muted">Log your first ingredient purchase to see costs here.</p>
+                                    <a href="{{ url_for('purchases.add_purchase') }}" class="btn btn-primary">Log Purchase</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Packaging Table -->
+<div class="card">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Packaging Costs</h5>
+        <a href="{{ url_for('inventory.list_packaging') }}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-list"></i> Manage Packaging
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Packaging</th>
+                        <th>Unit</th>
+                        <th>Latest Cost</th>
+                        <th>Default Cost</th>
+                        <th>Last Purchase</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if packaging_costs %}
+                        {% for entry in packaging_costs %}
+                            <tr>
+                                <td>{{ entry.item.name }}</td>
+                                <td>{{ entry.item.default_unit }}</td>
+                                <td>
+                                    {% if entry.latest_purchase %}
+                                        <strong>${{ (entry.unit_cost_cents / 100)|round(4) }}</strong> per {{ entry.item.default_unit }}
+                                    {% else %}
+                                        <span class="text-muted">No purchase data</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if entry.item.default_price_per_unit_cents %}
+                                        ${{ (entry.item.default_price_per_unit_cents / 100)|round(4) }} per {{ entry.item.default_unit }}
+                                    {% else %}
+                                        <span class="text-muted">Not set</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if entry.last_purchase_date %}
+                                        {{ entry.last_purchase_date.strftime('%Y-%m-%d') }}
+                                        <span class="badge bg-{{ 'success' if (entry.last_purchase_date - now().date()).days > -90 else 'warning' }}">
+                                            {{ ((now().date() - entry.last_purchase_date).days) }} days ago
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">Never</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <div class="empty-state">
+                                    <i class="bi bi-cart-x"></i>
+                                    <h5>No Packaging Costs Found</h5>
+                                    <p class="text-muted">Log your first packaging purchase to see costs here.</p>
+                                    <a href="{{ url_for('purchases.add_purchase') }}" class="btn btn-primary">Log Purchase</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

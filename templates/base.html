@@ -67,7 +67,8 @@
                             <li><a class="dropdown-item" href="/inventory/ingredients">Ingredients</a></li>
                             <li><a class="dropdown-item" href="/inventory/packaging">Packaging</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/purchases">Purchase Log</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('purchases.list_purchases') }}">Purchase Log</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('purchases.latest_costs') }}">Latest Costs</a></li>
                         </ul>
                     </li>
                     <li class="nav-item">

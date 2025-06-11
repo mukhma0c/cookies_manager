@@ -40,13 +40,13 @@
                         <div class="col-md-6">
                             <label for="default_unit" class="form-label required-field">Default Unit</label>
                             <select class="form-select" id="default_unit" name="default_unit" required>
-                                <option value="g" {{ 'selected' if ingredient and ingredient.default_unit == 'g' else '' }}>Grams (g)</option>
-                                <option value="kg" {{ 'selected' if ingredient and ingredient.default_unit == 'kg' else '' }}>Kilograms (kg)</option>
-                                <option value="ml" {{ 'selected' if ingredient and ingredient.default_unit == 'ml' else '' }}>Milliliters (ml)</option>
-                                <option value="l" {{ 'selected' if ingredient and ingredient.default_unit == 'l' else '' }}>Liters (l)</option>
-                                <option value="pcs" {{ 'selected' if ingredient and ingredient.default_unit == 'pcs' else '' }}>Pieces (pcs)</option>
-                                <option value="tsp" {{ 'selected' if ingredient and ingredient.default_unit == 'tsp' else '' }}>Teaspoon (tsp)</option>
-                                <option value="tbsp" {{ 'selected' if ingredient and ingredient.default_unit == 'tbsp' else '' }}>Tablespoon (tbsp)</option>
+                                <option value="g" {% if ingredient and ingredient.default_unit == 'g' %}selected{% endif %}>Grams (g)</option>
+                                <option value="kg" {% if ingredient and ingredient.default_unit == 'kg' %}selected{% endif %}>Kilograms (kg)</option>
+                                <option value="ml" {% if ingredient and ingredient.default_unit == 'ml' %}selected{% endif %}>Milliliters (ml)</option>
+                                <option value="l" {% if ingredient and ingredient.default_unit == 'l' %}selected{% endif %}>Liters (l)</option>
+                                <option value="pcs" {% if ingredient and ingredient.default_unit == 'pcs' %}selected{% endif %}>Pieces (pcs)</option>
+                                <option value="tsp" {% if ingredient and ingredient.default_unit == 'tsp' %}selected{% endif %}>Teaspoon (tsp)</option>
+                                <option value="tbsp" {% if ingredient and ingredient.default_unit == 'tbsp' %}selected{% endif %}>Tablespoon (tbsp)</option>
                             </select>
                         </div>
                         <div class="col-md-6">

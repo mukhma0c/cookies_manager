@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ 'Edit' if purchase else 'Log New' }} Purchase - Cookie Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">{{ 'Edit' if purchase else 'Log New' }} Purchase</h1>
+    <a href="{{ url_for('purchases.list_purchases') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Purchases
+    </a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Purchase Details</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('purchases.edit_purchase', purchase_id=purchase.id) if purchase else url_for('purchases.add_purchase') }}" method="post">
+                    <div class="mb-3">
+                        <label for="item_type" class="form-label required-field">Item Type</label>
+                        <select class="form-select" id="item_type" name="item_type" required onchange="updateItemSelect()">
+                            <option value="ingredient" {% if purchase and purchase.item_type == 'ingredient' %}selected{% endif %}>Ingredient</option>
+                            <option value="packaging" {% if purchase and purchase.item_type == 'packaging' %}selected{% endif %}>Packaging</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="item_id" class="form-label required-field">Item</label>
+                        <select class="form-select" id="item_id" name="item_id" required>
+                            <option value="">Select Item</option>
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="purchase_date" class="form-label required-field">Purchase Date</label>
+                            <input type="date" class="form-control" id="purchase_date" name="purchase_date" 
+                                   value="{{ purchase.purchase_date.strftime('%Y-%m-%d') if purchase else '' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="quantity" class="form-label required-field">Quantity</label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" min="0.01" class="form-control" id="quantity" name="quantity" 
+                                       value="{{ purchase.quantity if purchase else '' }}" required>
+                                <select class="form-select" id="unit" name="unit" style="max-width: 120px;">
+                                    <option value="g" {% if purchase and purchase.unit == 'g' %}selected{% endif %}>g</option>
+                                    <option value="kg" {% if purchase and purchase.unit == 'kg' %}selected{% endif %}>kg</option>
+                                    <option value="ml" {% if purchase and purchase.unit == 'ml' %}selected{% endif %}>ml</option>
+                                    <option value="l" {% if purchase and purchase.unit == 'l' %}selected{% endif %}>l</option>
+                                    <option value="pcs" {% if purchase and purchase.unit == 'pcs' %}selected{% endif %}>pcs</option>
+                                    <option value="box" {% if purchase and purchase.unit == 'box' %}selected{% endif %}>box</option>
+                                    <option value="m" {% if purchase and purchase.unit == 'm' %}selected{% endif %}>m</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="total_cost_dollars" class="form-label required-field">Total Cost</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.01" min="0" class="form-control" id="total_cost_dollars" name="total_cost_dollars" 
+                                   value="{{ total_cost_dollars|round(2) if total_cost_dollars else '' }}" required>
+                        </div>
+                        <div class="form-text">The unit cost will be calculated automatically.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3">{{ purchase.notes if purchase }}</textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('purchases.list_purchases') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            {{ 'Update' if purchase else 'Save' }} Purchase
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Tips</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    Recording your purchases allows accurate cost tracking.
+                </div>
+                
+                <h6 class="mt-3">Bulk Shopping Tips:</h6>
+                <ul>
+                    <li>Log each item separately for better inventory tracking.</li>
+                    <li>Match the unit to how you'll use the item in recipes.</li>
+                    <li>Consistent units make recipe costing more accurate.</li>
+                </ul>
+                
+                <div id="unit-cost-preview" class="alert alert-secondary mt-3 d-none">
+                    <h6 class="mb-2">Cost Calculation:</h6>
+                    <p class="mb-1">Total Cost: <strong id="preview-total-cost">$0.00</strong></p>
+                    <p class="mb-1">Quantity: <strong id="preview-quantity">0</strong> <span id="preview-unit">units</span></p>
+                    <p class="mb-0">Unit Cost: <strong id="preview-unit-cost">$0.00</strong> per <span id="preview-unit-2">unit</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Store all items for selection
+    const ingredients = [
+        {% for ingredient in ingredients %}
+            {
+                id: {{ ingredient.id }},
+                name: "{{ ingredient.name }}",
+                default_unit: "{{ ingredient.default_unit }}"
+            },
+        {% endfor %}
+    ];
+    
+    const packaging = [
+        {% for item in packaging_items %}
+            {
+                id: {{ item.id }},
+                name: "{{ item.name }}",
+                default_unit: "{{ item.default_unit }}"
+            },
+        {% endfor %}
+    ];
+    
+    // Initialize form
+    updateItemSelect();
+    
+    // Set initial values if editing
+    {% if purchase %}
+        document.getElementById('item_id').value = "{{ purchase.item_id }}";
+    {% endif %}
+    
+    // Add event listeners for cost preview
+    const quantityInput = document.getElementById('quantity');
+    const totalCostInput = document.getElementById('total_cost_dollars');
+    const unitSelect = document.getElementById('unit');
+    
+    [quantityInput, totalCostInput, unitSelect].forEach(input => {
+        input.addEventListener('input', updateUnitCostPreview);
+        input.addEventListener('change', updateUnitCostPreview);
+    });
+    
+    // Initial preview update
+    updateUnitCostPreview();
+    
+    // Register function to update unit when item changes
+    document.getElementById('item_id').addEventListener('change', updateDefaultUnit);
+});
+
+function updateItemSelect() {
+    const itemType = document.getElementById('item_type').value;
+    const itemSelect = document.getElementById('item_id');
+    const selectedId = itemSelect.value;
+    
+    // Clear existing options
+    itemSelect.innerHTML = '<option value="">Select Item</option>';
+    
+    // Add appropriate options based on type
+    if (itemType === 'ingredient') {
+        ingredients.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = item.name;
+            option.dataset.defaultUnit = item.default_unit;
+            itemSelect.appendChild(option);
+        });
+    } else {
+        packaging.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = item.name;
+            option.dataset.defaultUnit = item.default_unit;
+            itemSelect.appendChild(option);
+        });
+    }
+    
+    // Try to restore the selected item
+    if (selectedId) {
+        itemSelect.value = selectedId;
+    }
+    
+    // Update the unit based on the selected item
+    updateDefaultUnit();
+}
+
+function updateDefaultUnit() {
+    const itemSelect = document.getElementById('item_id');
+    const unitSelect = document.getElementById('unit');
+    
+    if (itemSelect.selectedIndex > 0) {
+        const selectedOption = itemSelect.options[itemSelect.selectedIndex];
+        const defaultUnit = selectedOption.dataset.defaultUnit;
+        
+        if (defaultUnit) {
+            // Find and select the matching unit option
+            for (let i = 0; i < unitSelect.options.length; i++) {
+                if (unitSelect.options[i].value === defaultUnit) {
+                    unitSelect.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Update the cost preview
+    updateUnitCostPreview();
+}
+
+function updateUnitCostPreview() {
+    const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+    const totalCost = parseFloat(document.getElementById('total_cost_dollars').value) || 0;
+    const unit = document.getElementById('unit').value;
+    
+    const previewDiv = document.getElementById('unit-cost-preview');
+    const previewTotalCost = document.getElementById('preview-total-cost');
+    const previewQuantity = document.getElementById('preview-quantity');
+    const previewUnit = document.getElementById('preview-unit');
+    const previewUnitCost = document.getElementById('preview-unit-cost');
+    const previewUnit2 = document.getElementById('preview-unit-2');
+    
+    if (quantity > 0 && totalCost > 0) {
+        const unitCost = totalCost / quantity;
+        
+        previewTotalCost.textContent = '$' + totalCost.toFixed(2);
+        previewQuantity.textContent = quantity.toString();
+        previewUnit.textContent = unit;
+        previewUnitCost.textContent = '$' + unitCost.toFixed(4);
+        previewUnit2.textContent = unit;
+        
+        previewDiv.classList.remove('d-none');
+    } else {
+        previewDiv.classList.add('d-none');
+    }
+}
+</script>
+{% endblock %}

@@ -1,9 +1,13 @@
 import os
 from flask import Flask, send_from_directory, session
 from flask_migrate import Migrate
+from flask_apscheduler import APScheduler
 from models import db
 from config import config
 from datetime import timedelta
+
+# Initialize scheduler
+scheduler = APScheduler()
 
 
 def create_app(config_name=None):
@@ -32,6 +36,14 @@ def create_app(config_name=None):
     # Initialize extensions
     db.init_app(app)
     Migrate(app, db)
+    
+    # Initialize and configure APScheduler
+    scheduler.init_app(app)
+    scheduler.start()
+    
+    # Register scheduled jobs
+    from scheduled_jobs import register_jobs
+    register_jobs(scheduler)
     
     # Register blueprints
     from views import register_blueprints
