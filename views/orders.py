@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify, flash, abort
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify, flash, abort, session
 from models import db, Order, Customer, Recipe, Ingredient, Packaging, OrderIngredient, OrderPackaging
 from cost_helpers import calculate_order_cost_preview, snapshot_order_costs
 from datetime import datetime
@@ -30,8 +30,7 @@ def new_order_step2():
     }
     
     # Store in session for later steps
-    session_data = dict(form_data)
-    request.cookies.set('order_wizard', session_data)
+    session['order_wizard'] = form_data
     
     # If a recipe was selected, pre-populate ingredients
     ingredients = []
@@ -95,8 +94,7 @@ def new_order_step3():
     }
     
     # Update session
-    session_data = dict(form_data)
-    request.cookies.set('order_wizard', session_data)
+    session['order_wizard'] = form_data
     
     return render_template('orders/wizard_step3.html', form_data=form_data)
 
@@ -115,9 +113,7 @@ def new_order_step4():
     }
     
     # Get ingredients from previous step
-    # In a real app, we'd get this from the session
-    # For simplicity, we'll simulate it
-    ingredients_data = request.cookies.get('order_wizard', {}).get('ingredients', [])
+    ingredients_data = session.get('order_wizard', {}).get('ingredients', [])
     form_data['ingredients'] = ingredients_data
     
     # Get all packaging options
@@ -157,9 +153,7 @@ def new_order_step5():
     }
     
     # Get ingredients from session
-    # In a real app, we'd get this from the session
-    # For simplicity, we'll simulate it
-    ingredients_data = request.cookies.get('order_wizard', {}).get('ingredients', [])
+    ingredients_data = session.get('order_wizard', {}).get('ingredients', [])
     form_data['ingredients'] = ingredients_data
     
     # Get customer and recipe for display
