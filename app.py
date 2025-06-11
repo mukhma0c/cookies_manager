@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask_migrate import Migrate
 from models import db
 from config import config
@@ -32,6 +32,11 @@ def create_app(config_name=None):
     # Register blueprints
     from views import register_blueprints
     register_blueprints(app)
+    
+    # Serve static files
+    @app.route('/static/<path:filename>')
+    def static_files(filename):
+        return send_from_directory(os.path.join(app.root_path, 'static'), filename)
     
     return app
 

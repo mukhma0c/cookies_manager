@@ -1,0 +1,140 @@
+/* Main CSS file for Cookie Manager */
+
+/* High contrast mode styles */
+.high-contrast {
+    --bs-primary: #005cbf;
+    --bs-primary-rgb: 0, 92, 191;
+    --bs-body-color: #000;
+    --bs-body-bg: #fff;
+    color-scheme: light;
+}
+
+.high-contrast .card,
+.high-contrast .table,
+.high-contrast .alert,
+.high-contrast .modal-content {
+    border-width: 2px;
+}
+
+.high-contrast .form-control,
+.high-contrast .btn {
+    border-width: 2px;
+}
+
+/* Helper utilities */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Card animations */
+.card-hover {
+    transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* Form styling */
+.required-field::after {
+    content: "*";
+    color: red;
+    margin-left: 4px;
+}
+
+/* Order status pills */
+.status-pill {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 50rem;
+}
+
+/* Cost preview sidebar */
+.cost-preview {
+    position: sticky;
+    top: 2rem;
+}
+
+/* Recipe card styling */
+.recipe-card {
+    height: 100%;
+}
+
+.recipe-card .recipe-img {
+    height: 180px;
+    object-fit: cover;
+}
+
+/* Ingredient thumbnails */
+.ingredient-thumbnail {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+}
+
+/* Step wizard navigation */
+.wizard-steps {
+    display: flex;
+    margin-bottom: 1.5rem;
+}
+
+.wizard-step {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    position: relative;
+}
+
+.wizard-step::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 0;
+    width: 100%;
+    height: 2px;
+    background: #dee2e6;
+    transform: translateY(-50%);
+    z-index: -1;
+}
+
+.wizard-step:last-child::after {
+    display: none;
+}
+
+.wizard-step.active .step-number {
+    background: var(--bs-primary);
+    color: white;
+}
+
+.wizard-step .step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #f8f9fa;
+    border: 2px solid #dee2e6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 10px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Low stock warning */
+.low-stock-warning {
+    border-left: 4px solid #ffc107;
+    padding-left: 1rem;
+}
+
+/* Empty state placeholders */
+.empty-state {
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: #dee2e6;
+    margin-bottom: 1rem;
+}

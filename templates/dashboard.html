@@ -3,13 +3,229 @@
 {% block title %}Dashboard - Cookie Manager{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <h1 class="mb-4">Cookie Manager Dashboard</h1>
-        <div class="alert alert-success">
-            <h4 class="alert-heading">Hello World!</h4>
-            <p>Your Cookie Manager application is running successfully.</p>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">Dashboard</h1>
+    <div class="d-flex">
+        <div class="input-group">
+            <span class="input-group-text">Time Period</span>
+            <select class="form-select" id="time-period-selector">
+                <option value="7">Last 7 days</option>
+                <option value="30" selected>Last 30 days</option>
+                <option value="90">Last 90 days</option>
+                <option value="year">This Year</option>
+            </select>
         </div>
     </div>
 </div>
+
+<!-- KPI Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card card-dashboard border-primary h-100">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Total Revenue</h6>
+                <h2 class="card-title text-primary">$0.00</h2>
+                <p class="card-text text-success">
+                    <i class="bi bi-arrow-up"></i> 0% from previous period
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-dashboard border-success h-100">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Profit</h6>
+                <h2 class="card-title text-success">$0.00</h2>
+                <p class="card-text text-success">
+                    <i class="bi bi-arrow-up"></i> 0% from previous period
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-dashboard border-info h-100">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Orders</h6>
+                <h2 class="card-title text-info">0</h2>
+                <p class="card-text text-muted">
+                    <i class="bi bi-dash"></i> 0 from previous period
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-dashboard border-warning h-100">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Cookies Baked</h6>
+                <h2 class="card-title text-warning">0</h2>
+                <p class="card-text text-muted">
+                    <i class="bi bi-dash"></i> 0 from previous period
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Monthly Revenue & Profit</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Top Selling Cookies</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="topCookiesChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Low Stock Alerts -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Low Stock Alerts</h5>
+                <a href="/purchases/new" class="btn btn-sm btn-outline-primary">Log Purchase</a>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-light text-center mb-0">
+                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                    All ingredients and packaging are well-stocked.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Recent Orders</h5>
+                <a href="/orders" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Recipe</th>
+                                <th>Qty</th>
+                                <th>Amount</th>
+                                <th>Profit</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" class="text-center py-4">No orders yet</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sample data for charts
+        const monthlyData = {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [
+                {
+                    label: 'Revenue',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 2,
+                    data: [0, 0, 0, 0, 0, 0],
+                    fill: true
+                },
+                {
+                    label: 'Profit',
+                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                    borderColor: 'rgba(25, 135, 84, 1)',
+                    borderWidth: 2,
+                    data: [0, 0, 0, 0, 0, 0],
+                    fill: true
+                }
+            ]
+        };
+
+        const topCookiesData = {
+            labels: ['No Data'],
+            datasets: [{
+                data: [1],
+                backgroundColor: [
+                    'rgba(13, 110, 253, 0.7)',
+                    'rgba(25, 135, 84, 0.7)',
+                    'rgba(220, 53, 69, 0.7)',
+                    'rgba(255, 193, 7, 0.7)',
+                    'rgba(13, 202, 240, 0.7)'
+                ],
+                hoverOffset: 4
+            }]
+        };
+
+        // Initialize charts
+        const revenueChart = new Chart(
+            document.getElementById('revenueChart'),
+            {
+                type: 'line',
+                data: monthlyData,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+        const topCookiesChart = new Chart(
+            document.getElementById('topCookiesChart'),
+            {
+                type: 'doughnut',
+                data: topCookiesData,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            }
+        );
+    });
+</script>
 {% endblock %}
