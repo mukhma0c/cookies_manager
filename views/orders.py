@@ -109,7 +109,8 @@ def new_order_step4():
         'quantity_ordered': request.form.get('quantity_ordered', type=int, default=0),
         'quantity_baked': request.form.get('quantity_baked', type=int, default=0),
         'quantity_kept_family': request.form.get('quantity_kept_family', type=int, default=0),
-        'dough_weight_g': request.form.get('dough_weight_g', type=float, default=0)
+        'dough_weight_g': request.form.get('dough_weight_g', type=float, default=0),
+        'sale_price_total_cents': request.form.get('sale_price_total_cents', type=int, default=0)
     }
     
     # Get ingredients from previous step

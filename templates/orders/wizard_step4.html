@@ -125,7 +125,11 @@
                     <h6>Order Summary</h6>
                     <p class="mb-1">Cookies baked: <strong>{{ form_data.quantity_baked }}</strong></p>
                     <p class="mb-1">Cookies for sale: <strong>{{ form_data.quantity_baked - form_data.quantity_kept_family }}</strong></p>
-                    <p class="mb-1">Sale price: <strong>${{ (form_data.sale_price_total_cents / 100)|round(2) }}</strong></p>
+                    {% if form_data.sale_price_total_cents %}
+                        <p class="mb-1">Sale price: <strong>${{ (form_data.sale_price_total_cents / 100)|round(2) }}</strong></p>
+                    {% else %}
+                        <p class="mb-1">Sale price: <strong>$0.00</strong></p>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -186,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 ingredients: ingredients,
                 packaging: packaging,
                 quantity: quantityBaked,
-                sale_price_cents: {{ form_data.sale_price_total_cents }}
+                sale_price_cents: {{ form_data.sale_price_total_cents|default(0) }}
             }),
         })
         .then(response => response.json())
