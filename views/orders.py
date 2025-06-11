@@ -96,7 +96,7 @@ def new_order_step3():
     # Update session
     session['order_wizard'] = form_data
     
-    return render_template('orders/wizard_step3.html', form_data=form_data)
+    return render_template('orders/wizard_step3.html', form_data=form_data, Customer=Customer)
 
 @orders_bp.route('/new/step4', methods=['POST'])
 def new_order_step4():
