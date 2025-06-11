@@ -40,12 +40,12 @@
                         <div class="col-md-6">
                             <label for="default_unit" class="form-label required-field">Default Unit</label>
                             <select class="form-select" id="default_unit" name="default_unit" required>
-                                <option value="pcs" {% if packaging and packaging.default_unit == 'pcs' %}selected{% endif %}>Pieces (pcs)</option>
-                                <option value="box" {% if packaging and packaging.default_unit == 'box' %}selected{% endif %}>Boxes (box)</option>
-                                <option value="m" {% if packaging and packaging.default_unit == 'm' %}selected{% endif %}>Meters (m)</option>
-                                <option value="roll" {% if packaging and packaging.default_unit == 'roll' %}selected{% endif %}>Rolls (roll)</option>
-                                <option value="sheet" {% if packaging and packaging.default_unit == 'sheet' %}selected{% endif %}>Sheets (sheet)</option>
-                                <option value="bag" {% if packaging and packaging.default_unit == 'bag' %}selected{% endif %}>Bags (bag)</option>
+                                <option value="pcs" {{ 'selected' if packaging and packaging.default_unit == 'pcs' else '' }}>Pieces (pcs)</option>
+                                <option value="box" {{ 'selected' if packaging and packaging.default_unit == 'box' else '' }}>Boxes (box)</option>
+                                <option value="m" {{ 'selected' if packaging and packaging.default_unit == 'm' else '' }}>Meters (m)</option>
+                                <option value="roll" {{ 'selected' if packaging and packaging.default_unit == 'roll' else '' }}>Rolls (roll)</option>
+                                <option value="sheet" {{ 'selected' if packaging and packaging.default_unit == 'sheet' else '' }}>Sheets (sheet)</option>
+                                <option value="bag" {{ 'selected' if packaging and packaging.default_unit == 'bag' else '' }}>Bags (bag)</option>
                             </select>
                         </div>
                         <div class="col-md-6">
