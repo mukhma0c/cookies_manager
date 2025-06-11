@@ -102,10 +102,16 @@
             <div class="card-body">
                 <div class="mb-3">
                     <h6>Order Details</h6>
-                    <p class="mb-1">Customer: <strong id="customerName">{{ form_data.customer_name }}</strong></p>
+                    <p class="mb-1">Customer: <strong id="customerName">
+                        {% if form_data.customer_id %}
+                            {{ Customer.query.get(form_data.customer_id).display_name }}
+                        {% else %}
+                            Not selected
+                        {% endif %}
+                    </strong></p>
                     <p class="mb-1">Order Size: <strong>{{ form_data.quantity_ordered }} cookies</strong></p>
                     <p class="mb-1">Cookie Size: <strong>{{ form_data.cookie_size|capitalize }}</strong></p>
-                    {% if form_data.dough_weight_g > 0 %}
+                    {% if form_data.dough_weight_g and form_data.dough_weight_g > 0 %}
                         <p class="mb-1">Total Dough Weight: <strong>{{ form_data.dough_weight_g|round }}g</strong></p>
                     {% endif %}
                 </div>

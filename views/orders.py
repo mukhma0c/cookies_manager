@@ -58,6 +58,8 @@ def new_order_step2():
 @orders_bp.route('/new/step3', methods=['POST'])
 def new_order_step3():
     """Step 3 of the order wizard: Bake outcome."""
+    # Make Customer model available to the template
+    from models import Customer
     # Get ingredient selections from step 2
     ingredients = []
     for key, value in request.form.items():
