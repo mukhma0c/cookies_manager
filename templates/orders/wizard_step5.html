@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block title %}New Order - Review - Cookie Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">New Order</h1>
+</div>
+
+<!-- Wizard Progress -->
+<div class="wizard-steps mb-4">
+    <div class="wizard-step">
+        <div class="step-number">1</div>
+        <div class="step-title">Customer &amp; Recipe</div>
+    </div>
+    <div class="wizard-step">
+        <div class="step-number">2</div>
+        <div class="step-title">Ingredients</div>
+    </div>
+    <div class="wizard-step">
+        <div class="step-number">3</div>
+        <div class="step-title">Bake Outcome</div>
+    </div>
+    <div class="wizard-step">
+        <div class="step-number">4</div>
+        <div class="step-title">Packaging</div>
+    </div>
+    <div class="wizard-step active">
+        <div class="step-number">5</div>
+        <div class="step-title">Review &amp; Save</div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Step 5: Review &amp; Save Order</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('orders.create_order') }}" method="post">
+                    <!-- Hidden fields to carry forward all data -->
+                    <input type="hidden" name="customer_id" value="{{ form_data.customer_id }}">
+                    <input type="hidden" name="recipe_id" value="{{ form_data.recipe_id }}">
+                    <input type="hidden" name="cookie_size" value="{{ form_data.cookie_size }}">
+                    <input type="hidden" name="quantity_ordered" value="{{ form_data.quantity_ordered }}">
+                    <input type="hidden" name="quantity_baked" value="{{ form_data.quantity_baked }}">
+                    <input type="hidden" name="quantity_kept_family" value="{{ form_data.quantity_kept_family }}">
+                    <input type="hidden" name="dough_weight_g" value="{{ form_data.dough_weight_g }}">
+                    <input type="hidden" name="sale_price_total_cents" value="{{ form_data.sale_price_total_cents }}">
+                    
+                    <!-- Ingredients -->
+                    {% for ingredient in form_data.ingredients %}
+                        <input type="hidden" 
+                               name="ingredient_id_{{ loop.index }}" 
+                               value="{{ ingredient.id }}">
+                        <input type="hidden" 
+                               name="ingredient_amount_{{ loop.index }}" 
+                               value="{{ ingredient.amount }}">
+                    {% endfor %}
+                    
+                    <!-- Packaging -->
+                    {% for package in form_data.packaging %}
+                        <input type="hidden" 
+                               name="packaging_id_{{ loop.index }}" 
+                               value="{{ package.id }}">
+                        <input type="hidden" 
+                               name="packaging_quantity_{{ loop.index }}" 
+                               value="{{ package.quantity }}">
+                    {% endfor %}
+                    
+                    <div class="accordion mb-4" id="orderSummaryAccordion">
+                        <!-- Customer Details -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#customerDetails">
+                                    Customer Details
+                                </button>
+                            </h2>
+                            <div id="customerDetails" class="accordion-collapse collapse show" data-bs-parent="#orderSummaryAccordion">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p class="mb-1"><strong>Customer:</strong> {{ customer.display_name if customer else 'N/A' }}</p>
+                                            <p class="mb-1"><strong>Order Date:</strong> {{ now().strftime('%Y-%m-%d') }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-1"><strong>Recipe:</strong> {{ recipe.name if recipe else 'Custom Order' }}</p>
+                                            <p class="mb-1"><strong>Cookie Size:</strong> {{ form_data.cookie_size|capitalize }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Production Details -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#productionDetails">
+                                    Production Details
+                                </button>
+                            </h2>
+                            <div id="productionDetails" class="accordion-collapse collapse" data-bs-parent="#orderSummaryAccordion">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p class="mb-1"><strong>Ordered:</strong> {{ form_data.quantity_ordered }} cookies</p>
+                                            <p class="mb-1"><strong>Baked:</strong> {{ form_data.quantity_baked }} cookies</p>
+                                            <p class="mb-1"><strong>Kept for Family:</strong> {{ form_data.quantity_kept_family }} cookies</p>
+                                            <p class="mb-1"><strong>For Sale:</strong> {{ form_data.quantity_baked - form_data.quantity_kept_family }} cookies</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-1"><strong>Dough Weight:</strong> {{ form_data.dough_weight_g|round }}g</p>
+                                            <p class="mb-1"><strong>Weight per Cookie:</strong> {{ (form_data.dough_weight_g / form_data.quantity_baked)|round }}g</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ingredients -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ingredientsDetails">
+                                    Ingredients ({{ form_data.ingredients|length }})
+                                </button>
+                            </h2>
+                            <div id="ingredientsDetails" class="accordion-collapse collapse" data-bs-parent="#orderSummaryAccordion">
+                                <div class="accordion-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Ingredient</th>
+                                                    <th>Amount</th>
+                                                    <th>Estimated Cost</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for ingredient in form_data.ingredients %}
+                                                    <tr>
+                                                        <td>{{ ingredient.name }}</td>
+                                                        <td>{{ ingredient.amount }} {{ ingredient.unit }}</td>
+                                                        <td>${{ ((cost_preview.ingredient_cost_cents / form_data.ingredients|length) / 100)|round(2) }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <th colspan="2">Total Ingredient Cost</th>
+                                                    <th>${{ (cost_preview.ingredient_cost_cents / 100)|round(2) }}</th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Packaging -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#packagingDetails">
+                                    Packaging ({{ form_data.packaging|length }})
+                                </button>
+                            </h2>
+                            <div id="packagingDetails" class="accordion-collapse collapse" data-bs-parent="#orderSummaryAccordion">
+                                <div class="accordion-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th>Quantity</th>
+                                                    <th>Estimated Cost</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for package in form_data.packaging %}
+                                                    <tr>
+                                                        <td>{{ package.name }}</td>
+                                                        <td>{{ package.quantity }} {{ package.unit }}</td>
+                                                        <td>${{ ((cost_preview.packaging_cost_cents / form_data.packaging|length) / 100)|round(2) }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <th colspan="2">Total Packaging Cost</th>
+                                                    <th>${{ (cost_preview.packaging_cost_cents / 100)|round(2) }}</th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notes field -->
+                    <div class="mb-4">
+                        <label for="notes" class="form-label">Order Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Any additional notes about this order..."></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('orders.new_order_step4') }}" class="btn btn-outline-secondary">Back</a>
+                        <button type="submit" class="btn btn-success">Create Order</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card cost-preview">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Financial Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-{{ 'success' if (cost_preview.total_cost_cents < form_data.sale_price_total_cents) else 'danger' }}">
+                    <i class="bi bi-{{ 'check-circle-fill' if (cost_preview.total_cost_cents < form_data.sale_price_total_cents) else 'exclamation-triangle-fill' }} me-2"></i>
+                    {{ 'This order is profitable.' if (cost_preview.total_cost_cents < form_data.sale_price_total_cents) else 'This order may not be profitable!' }}
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="border-bottom pb-2">Order Costs</h6>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Ingredient Cost:</span>
+                        <strong>${{ (cost_preview.ingredient_cost_cents / 100)|round(2) }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Packaging Cost:</span>
+                        <strong>${{ (cost_preview.packaging_cost_cents / 100)|round(2) }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Total Cost:</span>
+                        <strong>${{ (cost_preview.total_cost_cents / 100)|round(2) }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Cost per Cookie:</span>
+                        <strong>${{ ((cost_preview.total_cost_cents / form_data.quantity_baked) / 100)|round(2) }}</strong>
+                    </div>
+                </div>
+                
+                <div>
+                    <h6 class="border-bottom pb-2">Revenue &amp; Profit</h6>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Sale Price:</span>
+                        <strong>${{ (form_data.sale_price_total_cents / 100)|round(2) }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Price per Cookie:</span>
+                        <strong>${{ ((form_data.sale_price_total_cents / (form_data.quantity_baked - form_data.quantity_kept_family)) / 100)|round(2) }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Profit:</span>
+                        <strong class="{{ 'text-success' if (form_data.sale_price_total_cents > cost_preview.total_cost_cents) else 'text-danger' }}">
+                            ${{ ((form_data.sale_price_total_cents - cost_preview.total_cost_cents) / 100)|round(2) }}
+                        </strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Profit Margin:</span>
+                        <strong class="{{ 'text-success' if (form_data.sale_price_total_cents > cost_preview.total_cost_cents) else 'text-danger' }}">
+                            {{ (((form_data.sale_price_total_cents - cost_preview.total_cost_cents) / form_data.sale_price_total_cents) * 100)|round(1) }}%
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

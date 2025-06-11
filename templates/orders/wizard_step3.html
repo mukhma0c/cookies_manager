@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}New Order - Step 3 - Cookie Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">New Order</h1>
+</div>
+
+<!-- Wizard Progress -->
+<div class="wizard-steps mb-4">
+    <div class="wizard-step">
+        <div class="step-number">1</div>
+        <div class="step-title">Customer &amp; Recipe</div>
+    </div>
+    <div class="wizard-step">
+        <div class="step-number">2</div>
+        <div class="step-title">Ingredients</div>
+    </div>
+    <div class="wizard-step active">
+        <div class="step-number">3</div>
+        <div class="step-title">Bake Outcome</div>
+    </div>
+    <div class="wizard-step">
+        <div class="step-number">4</div>
+        <div class="step-title">Packaging</div>
+    </div>
+    <div class="wizard-step">
+        <div class="step-number">5</div>
+        <div class="step-title">Review &amp; Save</div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Step 3: Bake Outcome</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('orders.new_order_step4') }}" method="post">
+                    <!-- Hidden fields to carry forward -->
+                    <input type="hidden" name="customer_id" value="{{ form_data.customer_id }}">
+                    <input type="hidden" name="recipe_id" value="{{ form_data.recipe_id }}">
+                    <input type="hidden" name="cookie_size" value="{{ form_data.cookie_size }}">
+                    <input type="hidden" name="quantity_ordered" value="{{ form_data.quantity_ordered }}">
+                    <input type="hidden" name="dough_weight_g" value="{{ form_data.dough_weight_g }}">
+                    
+                    <!-- Include ingredient data as hidden fields -->
+                    {% for ingredient in form_data.ingredients %}
+                        <input type="hidden" 
+                               name="ingredient_id_{{ loop.index }}" 
+                               value="{{ ingredient.id }}">
+                        <input type="hidden" 
+                               name="ingredient_amount_{{ loop.index }}" 
+                               value="{{ ingredient.amount }}">
+                    {% endfor %}
+                    
+                    <div class="mb-3">
+                        <label for="quantity_baked" class="form-label required-field">How many cookies were actually baked?</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="quantity_baked" name="quantity_baked" 
+                                   value="{{ form_data.quantity_ordered }}" min="1" required>
+                            <span class="input-group-text">cookies</span>
+                        </div>
+                        <div class="form-text">May differ from ordered quantity due to dough yield or other factors.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="quantity_kept_family" class="form-label">How many cookies kept for family/testing?</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="quantity_kept_family" name="quantity_kept_family" 
+                                   value="0" min="0">
+                            <span class="input-group-text">cookies</span>
+                        </div>
+                        <div class="form-text">These won't be counted in revenue calculations.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="sale_price_total_cents" class="form-label required-field">Total Sale Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="sale_price_dollars" step="0.01" min="0" required>
+                            <input type="hidden" id="sale_price_total_cents" name="sale_price_total_cents" value="0">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('orders.new_order_step2') }}" class="btn btn-outline-secondary">Back</a>
+                        <button type="submit" class="btn btn-primary">Continue to Packaging</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card cost-preview">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Bake Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>Order Details</h6>
+                    <p class="mb-1">Customer: <strong id="customerName">{{ form_data.customer_name }}</strong></p>
+                    <p class="mb-1">Order Size: <strong>{{ form_data.quantity_ordered }} cookies</strong></p>
+                    <p class="mb-1">Cookie Size: <strong>{{ form_data.cookie_size|capitalize }}</strong></p>
+                    {% if form_data.dough_weight_g > 0 %}
+                        <p class="mb-1">Total Dough Weight: <strong>{{ form_data.dough_weight_g|round }}g</strong></p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <h6>Ingredients Used</h6>
+                    <ul class="list-group list-group-flush">
+                        {% for ingredient in form_data.ingredients %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                {{ ingredient.name }}
+                                <span class="badge bg-light text-dark">{{ ingredient.amount }} {{ ingredient.unit }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle dollar to cents conversion for price
+    const salePriceDollarsInput = document.getElementById('sale_price_dollars');
+    const salePriceCentsInput = document.getElementById('sale_price_total_cents');
+    
+    salePriceDollarsInput.addEventListener('input', function() {
+        // Convert dollars to cents (handle decimals properly)
+        const dollars = parseFloat(this.value) || 0;
+        const cents = Math.round(dollars * 100);
+        salePriceCentsInput.value = cents;
+    });
+    
+    // Set initial value
+    salePriceDollarsInput.dispatchEvent(new Event('input'));
+});
+</script>
+{% endblock %}

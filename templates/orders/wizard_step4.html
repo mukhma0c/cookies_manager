@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+
+{% block title %}New Order - Step 4 - Cookie Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">New Order</h1>
+</div>
+
+<!-- Wizard Progress -->
+<div class="wizard-steps mb-4">
+    <div class="wizard-step">
+        <div class="step-number">1</div>
+        <div class="step-title">Customer &amp; Recipe</div>
+    </div>
+    <div class="wizard-step">
+        <div class="step-number">2</div>
+        <div class="step-title">Ingredients</div>
+    </div>
+    <div class="wizard-step">
+        <div class="step-number">3</div>
+        <div class="step-title">Bake Outcome</div>
+    </div>
+    <div class="wizard-step active">
+        <div class="step-number">4</div>
+        <div class="step-title">Packaging</div>
+    </div>
+    <div class="wizard-step">
+        <div class="step-number">5</div>
+        <div class="step-title">Review &amp; Save</div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Step 4: Select Packaging</h5>
+            </div>
+            <div class="card-body">
+                <form id="packagingForm" action="{{ url_for('orders.new_order_step5') }}" method="post">
+                    <!-- Hidden fields to carry forward -->
+                    <input type="hidden" name="customer_id" value="{{ form_data.customer_id }}">
+                    <input type="hidden" name="recipe_id" value="{{ form_data.recipe_id }}">
+                    <input type="hidden" name="cookie_size" value="{{ form_data.cookie_size }}">
+                    <input type="hidden" name="quantity_ordered" value="{{ form_data.quantity_ordered }}">
+                    <input type="hidden" name="quantity_baked" value="{{ form_data.quantity_baked }}">
+                    <input type="hidden" name="quantity_kept_family" value="{{ form_data.quantity_kept_family }}">
+                    <input type="hidden" name="dough_weight_g" value="{{ form_data.dough_weight_g }}">
+                    <input type="hidden" name="sale_price_total_cents" value="{{ form_data.sale_price_total_cents }}">
+                    
+                    <!-- Include ingredient data as hidden fields -->
+                    {% for ingredient in form_data.ingredients %}
+                        <input type="hidden" 
+                               name="ingredient_id_{{ loop.index }}" 
+                               value="{{ ingredient.id }}">
+                        <input type="hidden" 
+                               name="ingredient_amount_{{ loop.index }}" 
+                               value="{{ ingredient.amount }}">
+                    {% endfor %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Packaging Materials</label>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th style="width: 35%;">Quantity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in packaging %}
+                                        <tr>
+                                            <td>{{ item.name }}</td>
+                                            <td>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control packaging-quantity" 
+                                                           id="packaging_quantity_{{ item.id }}" 
+                                                           name="packaging_quantity_{{ item.id }}" 
+                                                           value="0" 
+                                                           min="0" step="0.1" 
+                                                           data-packaging-id="{{ item.id }}"
+                                                           data-packaging-name="{{ item.name }}">
+                                                    <span class="input-group-text">{{ item.default_unit }}</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('orders.new_order_step3') }}" class="btn btn-outline-secondary">Back</a>
+                        <button type="submit" class="btn btn-primary">Continue to Review</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card cost-preview">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Packaging Cost Preview</h5>
+            </div>
+            <div class="card-body">
+                <div id="costPreview">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Add packaging to see cost preview.
+                    </div>
+                    
+                    <div class="d-none" id="costBreakdown">
+                        <p class="mb-1">Total packaging cost: <strong id="totalPackagingCost">$0.00</strong></p>
+                        <p class="mb-1">Estimated cost per cookie: <strong id="costPerCookie">$0.00</strong></p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="mt-3">
+                    <h6>Order Summary</h6>
+                    <p class="mb-1">Cookies baked: <strong>{{ form_data.quantity_baked }}</strong></p>
+                    <p class="mb-1">Cookies for sale: <strong>{{ form_data.quantity_baked - form_data.quantity_kept_family }}</strong></p>
+                    <p class="mb-1">Sale price: <strong>${{ (form_data.sale_price_total_cents / 100)|round(2) }}</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const packagingInputs = document.querySelectorAll('.packaging-quantity');
+    const totalPackagingCostEl = document.getElementById('totalPackagingCost');
+    const costPerCookieEl = document.getElementById('costPerCookie');
+    const costBreakdownEl = document.getElementById('costBreakdown');
+    const quantityBaked = {{ form_data.quantity_baked }};
+    
+    // Extract ingredient data from hidden fields
+    const ingredients = [];
+    const ingredientIds = document.querySelectorAll('input[name^="ingredient_id_"]');
+    
+    ingredientIds.forEach((idInput, index) => {
+        const id = parseInt(idInput.value);
+        const amountInput = document.querySelector(`input[name="ingredient_amount_${index + 1}"]`);
+        const amount = parseFloat(amountInput.value);
+        
+        ingredients.push({
+            id: id,
+            amount: amount
+        });
+    });
+    
+    // Function to update cost preview
+    function updateCostPreview() {
+        // Collect packaging data
+        const packaging = [];
+        packagingInputs.forEach(input => {
+            if (parseFloat(input.value) > 0) {
+                packaging.push({
+                    id: parseInt(input.dataset.packagingId),
+                    quantity: parseFloat(input.value)
+                });
+            }
+        });
+        
+        // If no packaging, don't call API
+        if (packaging.length === 0) {
+            costBreakdownEl.classList.add('d-none');
+            return;
+        }
+        
+        // Call cost preview API
+        fetch('/orders/api/cost-preview', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                ingredients: ingredients,
+                packaging: packaging,
+                quantity: quantityBaked,
+                sale_price_cents: {{ form_data.sale_price_total_cents }}
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update the preview
+            totalPackagingCostEl.textContent = '$' + (data.packaging_cost_cents / 100).toFixed(2);
+            costPerCookieEl.textContent = '$' + (data.cost_per_cookie_cents / 100).toFixed(2);
+            costBreakdownEl.classList.remove('d-none');
+        })
+        .catch(error => {
+            console.error('Error fetching cost preview:', error);
+        });
+    }
+    
+    // Add event listeners to packaging inputs
+    packagingInputs.forEach(input => {
+        input.addEventListener('change', updateCostPreview);
+        input.addEventListener('input', updateCostPreview);
+    });
+    
+    // Initial update
+    updateCostPreview();
+});
+</script>
+{% endblock %}

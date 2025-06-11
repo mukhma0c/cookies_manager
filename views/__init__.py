@@ -6,5 +6,7 @@ def register_blueprints(app):
         app (Flask): Flask application instance
     """
     from views.dashboard import dashboard_bp
+    from views.orders import orders_bp
     
     app.register_blueprint(dashboard_bp)
+    app.register_blueprint(orders_bp)

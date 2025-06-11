@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}New Order - Step 2 - Cookie Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">New Order</h1>
+</div>
+
+<!-- Wizard Progress -->
+<div class="wizard-steps mb-4">
+    <div class="wizard-step">
+        <div class="step-number">1</div>
+        <div class="step-title">Customer &amp; Recipe</div>
+    </div>
+    <div class="wizard-step active">
+        <div class="step-number">2</div>
+        <div class="step-title">Ingredients</div>
+    </div>
+    <div class="wizard-step">
+        <div class="step-number">3</div>
+        <div class="step-title">Bake Outcome</div>
+    </div>
+    <div class="wizard-step">
+        <div class="step-number">4</div>
+        <div class="step-title">Packaging</div>
+    </div>
+    <div class="wizard-step">
+        <div class="step-number">5</div>
+        <div class="step-title">Review &amp; Save</div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Step 2: Select Ingredients</h5>
+            </div>
+            <div class="card-body">
+                <form id="ingredientsForm" action="{{ url_for('orders.new_order_step3') }}" method="post">
+                    <!-- Hidden fields to carry forward -->
+                    <input type="hidden" name="customer_id" value="{{ form_data.customer_id }}">
+                    <input type="hidden" name="recipe_id" value="{{ form_data.recipe_id }}">
+                    <input type="hidden" name="cookie_size" value="{{ form_data.cookie_size }}">
+                    <input type="hidden" name="quantity_ordered" value="{{ form_data.quantity_ordered }}">
+                    
+                    {% if recipe %}
+                        <div class="alert alert-info mb-4">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            Using ingredients from recipe: <strong>{{ recipe.name }}</strong>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning mb-4">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Custom order: Add ingredients as needed.
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Ingredients</label>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Ingredient</th>
+                                        <th style="width: 35%;">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ingredient in ingredients %}
+                                        <tr>
+                                            <td>{{ ingredient.name }}</td>
+                                            <td>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control ingredient-amount" 
+                                                           id="ingredient_amount_{{ ingredient.id }}" 
+                                                           name="ingredient_amount_{{ ingredient.id }}" 
+                                                           value="{{ ingredient.amount }}" 
+                                                           min="0" step="0.1" 
+                                                           data-ingredient-id="{{ ingredient.id }}"
+                                                           data-ingredient-name="{{ ingredient.name }}">
+                                                    <span class="input-group-text">{{ ingredient.unit }}</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('orders.new_order_step1') }}" class="btn btn-outline-secondary">Back</a>
+                        <button type="submit" class="btn btn-primary">Continue to Bake Outcome</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card cost-preview">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Ingredient Cost Preview</h5>
+            </div>
+            <div class="card-body">
+                <div id="costPreview">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Adjust ingredient amounts to see cost preview.
+                    </div>
+                    
+                    <div class="d-none" id="costBreakdown">
+                        <p class="mb-1">Total ingredient cost: <strong id="totalIngredientCost">$0.00</strong></p>
+                        <p class="mb-1">Estimated cost per cookie: <strong id="costPerCookie">$0.00</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ingredientInputs = document.querySelectorAll('.ingredient-amount');
+    const totalIngredientCostEl = document.getElementById('totalIngredientCost');
+    const costPerCookieEl = document.getElementById('costPerCookie');
+    const costBreakdownEl = document.getElementById('costBreakdown');
+    const quantityOrdered = {{ form_data.quantity_ordered }};
+    
+    // Function to update cost preview
+    function updateCostPreview() {
+        // Collect ingredient data
+        const ingredients = [];
+        ingredientInputs.forEach(input => {
+            if (parseFloat(input.value) > 0) {
+                ingredients.push({
+                    id: parseInt(input.dataset.ingredientId),
+                    amount: parseFloat(input.value)
+                });
+            }
+        });
+        
+        // If no ingredients, don't call API
+        if (ingredients.length === 0) {
+            costBreakdownEl.classList.add('d-none');
+            return;
+        }
+        
+        // Call cost preview API
+        fetch('/orders/api/cost-preview', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                ingredients: ingredients,
+                packaging: [],
+                quantity: quantityOrdered
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update the preview
+            totalIngredientCostEl.textContent = '$' + (data.ingredient_cost_cents / 100).toFixed(2);
+            costPerCookieEl.textContent = '$' + (data.cost_per_cookie_cents / 100).toFixed(2);
+            costBreakdownEl.classList.remove('d-none');
+        })
+        .catch(error => {
+            console.error('Error fetching cost preview:', error);
+        });
+    }
+    
+    // Add event listeners to ingredient inputs
+    ingredientInputs.forEach(input => {
+        input.addEventListener('change', updateCostPreview);
+        input.addEventListener('input', updateCostPreview);
+    });
+    
+    // Initial update
+    updateCostPreview();
+});
+</script>
+{% endblock %}

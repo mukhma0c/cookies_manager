@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Details - Cookie Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">Order #{{ order.id }}</h1>
+    <div>
+        <a href="{{ url_for('orders.list_orders') }}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left"></i> Back to Orders
+        </a>
+        <div class="btn-group">
+            <a href="{{ url_for('orders.edit_order', order_id=order.id) }}" class="btn btn-outline-primary">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteOrderModal">
+                <i class="bi bi-trash"></i> Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Order Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6>Customer Information</h6>
+                        <p class="mb-1"><strong>Customer:</strong> {{ order.customer.display_name if order.customer else 'N/A' }}</p>
+                        <p class="mb-1"><strong>Order Date:</strong> {{ order.order_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                        <p class="mb-1"><strong>Recipe:</strong> {{ order.recipe.name if order.recipe else 'Custom Order' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Production Information</h6>
+                        <p class="mb-1"><strong>Cookie Size:</strong> {{ order.cookie_size|capitalize }}</p>
+                        <p class="mb-1"><strong>Quantity Ordered:</strong> {{ order.quantity_ordered }} cookies</p>
+                        <p class="mb-1"><strong>Quantity Baked:</strong> {{ order.quantity_baked }} cookies</p>
+                        <p class="mb-1"><strong>Kept for Family:</strong> {{ order.quantity_kept_family }} cookies</p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Ingredients Used</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Ingredient</th>
+                                        <th>Amount</th>
+                                        <th>Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for oi in order.ingredients %}
+                                    <tr>
+                                        <td>{{ oi.ingredient.name }}</td>
+                                        <td>{{ oi.amount_used }} {{ oi.ingredient.default_unit }}</td>
+                                        <td>${{ (oi.cost_at_time_of_use_cents / 100)|round(2) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="2">Total Ingredient Cost</th>
+                                        <th>${{ (order.ingredient_cost_cents / 100)|round(2) }}</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h6>Packaging Used</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Quantity</th>
+                                        <th>Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for op in order.packaging %}
+                                    <tr>
+                                        <td>{{ op.packaging.name }}</td>
+                                        <td>{{ op.quantity_used }} {{ op.packaging.default_unit }}</td>
+                                        <td>${{ (op.cost_at_time_of_use_cents / 100)|round(2) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="2">Total Packaging Cost</th>
+                                        <th>${{ (order.packaging_cost_cents / 100)|round(2) }}</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if order.notes %}
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h6>Notes</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                {{ order.notes|nl2br }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Financial Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-{{ 'success' if order.profit_cents > 0 else 'danger' }}">
+                    <i class="bi bi-{{ 'check-circle-fill' if order.profit_cents > 0 else 'exclamation-triangle-fill' }} me-2"></i>
+                    {{ 'This order is profitable.' if order.profit_cents > 0 else 'This order is not profitable.' }}
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="border-bottom pb-2">Order Costs</h6>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Ingredient Cost:</span>
+                        <strong>${{ (order.ingredient_cost_cents / 100)|round(2) }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Packaging Cost:</span>
+                        <strong>${{ (order.packaging_cost_cents / 100)|round(2) }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Total Cost:</span>
+                        <strong>${{ (order.total_cost_cents / 100)|round(2) }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Cost per Cookie:</span>
+                        <strong>${{ ((order.total_cost_cents / order.quantity_baked) / 100)|round(2) }}</strong>
+                    </div>
+                </div>
+                
+                <div>
+                    <h6 class="border-bottom pb-2">Revenue &amp; Profit</h6>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Sale Price:</span>
+                        <strong>${{ (order.sale_price_total_cents / 100)|round(2) }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Price per Cookie:</span>
+                        <strong>${{ ((order.sale_price_total_cents / (order.quantity_baked - order.quantity_kept_family)) / 100)|round(2) }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Profit:</span>
+                        <strong class="{{ 'text-success' if order.profit_cents > 0 else 'text-danger' }}">
+                            ${{ (order.profit_cents / 100)|round(2) }}
+                        </strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Profit Margin:</span>
+                        <strong class="{{ 'text-success' if order.profit_cents > 0 else 'text-danger' }}">
+                            {{ order.profit_margin|round(1) }}%
+                        </strong>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h6 class="border-bottom pb-2">Actions</h6>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" onclick="window.print()">
+                            <i class="bi bi-printer"></i> Print Order
+                        </button>
+                        <button class="btn btn-outline-success">
+                            <i class="bi bi-file-earmark-excel"></i> Export to Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete Order #{{ order.id }}?</p>
+                <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('orders.delete_order', order_id=order.id) }}" method="post">
+                    <button type="submit" class="btn btn-danger">Delete Order</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

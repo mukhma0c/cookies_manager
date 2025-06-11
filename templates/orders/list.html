@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Orders - Cookie Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">Orders</h1>
+    <a href="{{ url_for('orders.new_order_step1') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> New Order
+    </a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <form class="row g-3">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text">Customer</span>
+                    <select class="form-select" name="customer_id">
+                        <option value="">All Customers</option>
+                        <!-- Customer options would be populated here -->
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text">Date Range</span>
+                    <input type="date" class="form-control" name="date_from">
+                    <input type="date" class="form-control" name="date_to">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-outline-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Order Date</th>
+                        <th>Customer</th>
+                        <th>Recipe</th>
+                        <th>Quantity</th>
+                        <th>Sale Price</th>
+                        <th>Cost</th>
+                        <th>Profit</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if orders %}
+                        {% for order in orders %}
+                            <tr>
+                                <td>{{ order.order_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ order.customer.display_name if order.customer else 'N/A' }}</td>
+                                <td>{{ order.recipe.name if order.recipe else 'Custom' }}</td>
+                                <td>{{ order.quantity_baked }}</td>
+                                <td>${{ '%.2f'|format(order.sale_price_total_cents / 100) }}</td>
+                                <td>${{ '%.2f'|format(order.total_cost_cents / 100) }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if order.profit_cents > 0 else 'danger' }}">
+                                        ${{ '%.2f'|format(order.profit_cents / 100) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('orders.view_order', order_id=order.id) }}" class="btn btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('orders.edit_order', order_id=order.id) }}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteOrderModal{{ order.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Delete Confirmation Modal -->
+                                    <div class="modal fade" id="deleteOrderModal{{ order.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Confirm Delete</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Are you sure you want to delete this order?
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <form action="{{ url_for('orders.delete_order', order_id=order.id) }}" method="post">
+                                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <div class="empty-state">
+                                    <i class="bi bi-journal-x"></i>
+                                    <h5>No Orders Found</h5>
+                                    <p class="text-muted">Create your first order to get started!</p>
+                                    <a href="{{ url_for('orders.new_order_step1') }}" class="btn btn-primary">Create Order</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
