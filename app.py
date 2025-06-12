@@ -43,7 +43,7 @@ def create_app(config_name=None):
     
     # Register scheduled jobs
     from scheduled_jobs import register_jobs
-    register_jobs(scheduler)
+    register_jobs(scheduler, app)
     
     # Register blueprints
     from views import register_blueprints
