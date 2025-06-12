@@ -24,7 +24,7 @@ def save_file(file, item_type):
         file_path = os.path.join(save_path, unique_filename)
         file.save(file_path)
         # Return the relative path to store in the database
-        return os.path.join(item_type, unique_filename)
+        return os.path.join('img', item_type, unique_filename)
     return None
 
 # Routes for Ingredients

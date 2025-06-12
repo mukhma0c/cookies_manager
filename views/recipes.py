@@ -24,7 +24,7 @@ def save_file(file):
         file_path = os.path.join(save_path, unique_filename)
         file.save(file_path)
         # Return the relative path to store in the database
-        return os.path.join('recipes', unique_filename)
+        return os.path.join('img', 'recipes', unique_filename)
     return None
 
 @recipes_bp.route('/')
@@ -227,7 +227,7 @@ def clone_recipe(recipe_id):
                 shutil.copy2(original_path, new_path)
                 
                 # Set path in new recipe
-                new_recipe.image_path = os.path.join('recipes', unique_filename)
+                new_recipe.image_path = os.path.join('img', 'recipes', unique_filename)
         except Exception as e:
             current_app.logger.error(f"Error copying image: {e}")
     
