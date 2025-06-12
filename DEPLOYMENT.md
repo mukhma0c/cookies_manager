@@ -40,8 +40,8 @@ pip install gunicorn
 ```bash
 export FLASK_APP=app.py
 export FLASK_CONFIG=production
-flask db upgrade
-python seed.py  # Optional if you want sample data
+flask init-db       # Initialize the database schema
+python seed.py      # Optional: only run if you want sample data
 ```
 
 ### 5. Configure Environment

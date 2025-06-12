@@ -6,9 +6,6 @@ from models import db, Customer, Ingredient, Packaging, Recipe, RecipeIngredient
 
 def seed_database():
     """Populate the database with initial data."""
-    # Create all tables if they don't exist
-    db.create_all()
-    """Populate the database with initial data."""
     print("Seeding database with initial data...")
     
     # Add customers

@@ -1,4 +1,5 @@
 import os
+import click
 from flask import Flask, send_from_directory, session
 from flask_migrate import Migrate
 from flask_apscheduler import APScheduler
@@ -66,6 +67,16 @@ def create_app(config_name=None):
     def utility_processor():
         from datetime import datetime
         return {'now': datetime.utcnow}
+    
+    # Add CLI command for initializing the database without seed data
+    @app.cli.command('init-db')
+    def init_db_command():
+        """Initialize the database with schema but no seed data."""
+        click.echo('Initializing the database schema...')
+        # This will apply all migrations to create the schema
+        from flask_migrate import upgrade
+        upgrade()
+        click.echo('Database schema initialized successfully.')
     
     return app
 
