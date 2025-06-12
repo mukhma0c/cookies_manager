@@ -40,9 +40,20 @@ pip install gunicorn
 ```bash
 export FLASK_APP=app.py
 export FLASK_CONFIG=production
-flask init-db       # Initialize the database schema
-python seed.py      # Optional: only run if you want sample data
+
+# For a new deployment where migrations haven't been initialized:
+flask db init                         # Initialize migration repository
+flask db migrate -m "Initial schema"  # Create initial migration
 ```
+
+Review the generated migration file in `migrations/versions/` to ensure it correctly represents your schema, then:
+
+```bash
+flask init-db                         # Initialize database (applies migrations)
+python seed.py                        # Optional: only run if you want sample data
+```
+
+Note: For subsequent deployments from the same repository, you only need to run `flask init-db` as the migration files will be included in the repository.
 
 ### 5. Configure Environment
 

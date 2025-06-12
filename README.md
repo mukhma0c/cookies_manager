@@ -42,7 +42,16 @@ A web application for managing cookie baking operations, including order trackin
 
 4. Initialize the database:
    ```
-   flask db upgrade
+   # First time setup (initializes the migration system)
+   flask db init
+   
+   # Create the initial migration
+   flask db migrate -m "Initial schema"
+   
+   # Apply migrations and initialize the database
+   flask init-db
+   
+   # Optional: Seed with sample data
    python seed.py
    ```
 
