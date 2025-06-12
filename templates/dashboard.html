@@ -24,9 +24,10 @@
         <div class="card card-dashboard border-primary h-100">
             <div class="card-body">
                 <h6 class="card-subtitle mb-2 text-muted">Total Revenue</h6>
-                <h2 class="card-title text-primary">$0.00</h2>
-                <p class="card-text text-success">
-                    <i class="bi bi-arrow-up"></i> 0% from previous period
+                <h2 class="card-title text-primary">${{ (dashboard.revenue_cents / 100)|round(2) }}</h2>
+                <p class="card-text {{ 'text-success' if dashboard.revenue_change >= 0 else 'text-danger' }}">
+                    <i class="bi {{ 'bi-arrow-up' if dashboard.revenue_change >= 0 else 'bi-arrow-down' }}"></i> 
+                    {{ dashboard.revenue_change|round(1) }}% from previous period
                 </p>
             </div>
         </div>
@@ -35,9 +36,10 @@
         <div class="card card-dashboard border-success h-100">
             <div class="card-body">
                 <h6 class="card-subtitle mb-2 text-muted">Profit</h6>
-                <h2 class="card-title text-success">$0.00</h2>
-                <p class="card-text text-success">
-                    <i class="bi bi-arrow-up"></i> 0% from previous period
+                <h2 class="card-title text-success">${{ (dashboard.profit_cents / 100)|round(2) }}</h2>
+                <p class="card-text {{ 'text-success' if dashboard.profit_change >= 0 else 'text-danger' }}">
+                    <i class="bi {{ 'bi-arrow-up' if dashboard.profit_change >= 0 else 'bi-arrow-down' }}"></i> 
+                    {{ dashboard.profit_change|round(1) }}% from previous period
                 </p>
             </div>
         </div>
@@ -46,9 +48,10 @@
         <div class="card card-dashboard border-info h-100">
             <div class="card-body">
                 <h6 class="card-subtitle mb-2 text-muted">Orders</h6>
-                <h2 class="card-title text-info">0</h2>
-                <p class="card-text text-muted">
-                    <i class="bi bi-dash"></i> 0 from previous period
+                <h2 class="card-title text-info">{{ dashboard.order_count }}</h2>
+                <p class="card-text {{ 'text-success' if dashboard.order_change >= 0 else 'text-danger' }}">
+                    <i class="bi {{ 'bi-arrow-up' if dashboard.order_change >= 0 else 'bi-arrow-down' }}"></i> 
+                    {{ dashboard.order_change|round(1) }}% from previous period
                 </p>
             </div>
         </div>
@@ -57,9 +60,10 @@
         <div class="card card-dashboard border-warning h-100">
             <div class="card-body">
                 <h6 class="card-subtitle mb-2 text-muted">Cookies Baked</h6>
-                <h2 class="card-title text-warning">0</h2>
-                <p class="card-text text-muted">
-                    <i class="bi bi-dash"></i> 0 from previous period
+                <h2 class="card-title text-warning">{{ dashboard.cookies_baked }}</h2>
+                <p class="card-text {{ 'text-success' if dashboard.cookies_change >= 0 else 'text-danger' }}">
+                    <i class="bi {{ 'bi-arrow-up' if dashboard.cookies_change >= 0 else 'bi-arrow-down' }}"></i> 
+                    {{ dashboard.cookies_change|round(1) }}% from previous period
                 </p>
             </div>
         </div>
@@ -172,9 +176,27 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td colspan="7" class="text-center py-4">No orders yet</td>
-                            </tr>
+                            {% if recent_orders %}
+                                {% for order in recent_orders %}
+                                    <tr>
+                                        <td>{{ order.order_date.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ order.customer.name if order.customer else 'N/A' }}</td>
+                                        <td>{{ order.recipe.name if order.recipe else 'Custom' }}</td>
+                                        <td>{{ order.quantity_baked }}</td>
+                                        <td>${{ (order.sale_price_total_cents / 100)|round(2) }}</td>
+                                        <td>${{ (order.total_cost_cents / 100)|round(2) }}</td>
+                                        <td>
+                                            <span class="badge {{ 'bg-success' if order.profit_cents > 0 else 'bg-danger' }}">
+                                                ${{ (order.profit_cents / 100)|round(2) }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">No orders yet</td>
+                                </tr>
+                            {% endif %}
                         </tbody>
                     </table>
                 </div>
