@@ -79,10 +79,14 @@ def new_order_step2():
     # Store in session for later steps
     session['order_wizard'] = form_data
     
-    # If a recipe was selected, pre-populate ingredients
+    # If coming back from step 3, use ingredients from session
     ingredients = []
     recipe = None
-    if form_data['recipe_id']:
+    if 'ingredients' in form_data:
+        # Use the ingredients already in the session
+        ingredients = form_data['ingredients']
+    elif form_data['recipe_id']:
+        # If a recipe was selected and no stored ingredients, pre-populate ingredients
         recipe = Recipe.query.get_or_404(form_data['recipe_id'])
         for ri in recipe.ingredients:
             ingredients.append({

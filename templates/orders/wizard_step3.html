@@ -60,7 +60,7 @@
                         <label for="quantity_baked" class="form-label required-field">How many cookies were actually baked?</label>
                         <div class="input-group">
                             <input type="number" class="form-control" id="quantity_baked" name="quantity_baked" 
-                                   value="{{ form_data.quantity_ordered }}" min="1" required>
+                                   value="{{ form_data.quantity_baked if form_data.get('quantity_baked') else form_data.quantity_ordered }}" min="1" required>
                             <span class="input-group-text">cookies</span>
                         </div>
                         <div class="form-text">May differ from ordered quantity due to dough yield or other factors.</div>
@@ -70,7 +70,7 @@
                         <label for="quantity_kept_family" class="form-label">How many cookies kept for family/testing?</label>
                         <div class="input-group">
                             <input type="number" class="form-control" id="quantity_kept_family" name="quantity_kept_family" 
-                                   value="0" min="0">
+                                   value="{{ form_data.quantity_kept_family if form_data.get('quantity_kept_family') else 0 }}" min="0">
                             <span class="input-group-text">cookies</span>
                         </div>
                         <div class="form-text">These won't be counted in revenue calculations.</div>
@@ -80,8 +80,10 @@
                         <label for="sale_price_total_cents" class="form-label required-field">Total Sale Price</label>
                         <div class="input-group">
                             <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" id="sale_price_dollars" step="0.01" min="0" required>
-                            <input type="hidden" id="sale_price_total_cents" name="sale_price_total_cents" value="0">
+                            <input type="number" class="form-control" id="sale_price_dollars" step="0.01" min="0" required
+                                   value="{{ (form_data.sale_price_total_cents / 100)|round(2) if form_data.get('sale_price_total_cents') else '' }}">
+                            <input type="hidden" id="sale_price_total_cents" name="sale_price_total_cents" 
+                                   value="{{ form_data.sale_price_total_cents if form_data.get('sale_price_total_cents') else 0 }}">
                         </div>
                     </div>
                     
