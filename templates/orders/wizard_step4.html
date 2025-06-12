@@ -78,7 +78,7 @@
                                                     <input type="number" class="form-control packaging-quantity" 
                                                            id="packaging_quantity_{{ item.id }}" 
                                                            name="packaging_quantity_{{ item.id }}" 
-                                                           value="{% for pkg in form_data.get('packaging', []) %}{% if pkg.id == item.id %}{{ pkg.quantity }}{% endif %}{% endfor %}" 
+                                                           value="0" 
                                                            min="0" step="0.1" 
                                                            data-packaging-id="{{ item.id }}"
                                                            data-packaging-name="{{ item.name }}">

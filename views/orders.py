@@ -207,15 +207,21 @@ def new_order_step5():
         # Get packaging selections from step 4
         packaging_items = []
         for key, value in request.form.items():
-            if key.startswith('packaging_quantity_') and float(value) > 0:
-                packaging_id = int(key.replace('packaging_quantity_', ''))
-                packaging = Packaging.query.get(packaging_id)
-                packaging_items.append({
-                    'id': packaging_id,
-                    'name': packaging.name,
-                    'quantity': float(value),
-                    'unit': packaging.default_unit
-                })
+            if key.startswith('packaging_quantity_'):
+                try:
+                    # Only process non-empty values that are > 0
+                    if value.strip() and float(value) > 0:
+                        packaging_id = int(key.replace('packaging_quantity_', ''))
+                        packaging = Packaging.query.get(packaging_id)
+                        packaging_items.append({
+                            'id': packaging_id,
+                            'name': packaging.name,
+                            'quantity': float(value),
+                            'unit': packaging.default_unit
+                        })
+                except (ValueError, AttributeError):
+                    # Skip invalid values
+                    continue
         
         # Get all form data
         form_data = {
