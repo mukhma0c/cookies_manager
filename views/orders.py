@@ -14,7 +14,7 @@ def list_orders():
 @orders_bp.route('/new', methods=['GET'])
 def new_order_step1():
     """Step 1 of the order wizard: Customer & Recipe selection."""
-    customers = Customer.query.order_by(Customer.display_name).all()
+    customers = Customer.query.order_by(Customer.name).all()
     recipes = Recipe.query.order_by(Recipe.name).all()
     
     # Pre-select recipe if provided in query string

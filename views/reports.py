@@ -123,7 +123,7 @@ def profit_report():
         orders_data.append({
             'id': order.id,
             'date': order.order_date,
-            'customer': order.customer.display_name if order.customer else 'N/A',
+            'customer': order.customer.name if order.customer else 'N/A',
             'recipe': order.recipe.name if order.recipe else 'Custom',
             'quantity': order.quantity_baked,
             'revenue_cents': order.sale_price_total_cents,
@@ -509,7 +509,7 @@ def export_profit_csv():
         writer.writerow([
             order.id,
             order.order_date.strftime('%Y-%m-%d'),
-            order.customer.display_name if order.customer else 'N/A',
+            order.customer.name if order.customer else 'N/A',
             order.recipe.name if order.recipe else 'Custom',
             order.quantity_baked,
             "{:.2f}".format(order.sale_price_total_cents / 100),

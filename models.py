@@ -145,7 +145,7 @@ class Order(db.Model):
     ingredient_overrides = db.relationship('OrderIngredientOverride', back_populates='order', cascade='all, delete-orphan')
     
     def __repr__(self):
-        return f'<Order {self.id} - {self.customer.display_name if self.customer else "Unknown"}>'
+        return f'<Order {self.id} - {self.customer.name if self.customer else "Unknown"}>'
     
     @property
     def ingredient_cost_cents(self):
