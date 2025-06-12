@@ -16,7 +16,14 @@ def new_order_step1():
     """Step 1 of the order wizard: Customer & Recipe selection."""
     customers = Customer.query.order_by(Customer.display_name).all()
     recipes = Recipe.query.order_by(Recipe.name).all()
-    return render_template('orders/wizard_step1.html', customers=customers, recipes=recipes)
+    
+    # Pre-select recipe if provided in query string
+    preselected_recipe_id = request.args.get('recipe_id', type=int)
+    
+    return render_template('orders/wizard_step1.html', 
+                          customers=customers, 
+                          recipes=recipes,
+                          preselected_recipe_id=preselected_recipe_id)
 
 @orders_bp.route('/new/step2', methods=['POST'])
 def new_order_step2():

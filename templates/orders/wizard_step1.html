@@ -54,7 +54,7 @@
                         <select class="form-select" id="recipe_id" name="recipe_id">
                             <option value="">Custom Order (No Recipe)</option>
                             {% for recipe in recipes %}
-                                <option value="{{ recipe.id }}">{{ recipe.name }}</option>
+                                <option value="{{ recipe.id }}" {% if preselected_recipe_id and preselected_recipe_id == recipe.id %}selected{% endif %}>{{ recipe.name }}</option>
                             {% endfor %}
                         </select>
                         <div class="form-text">Select a recipe to pre-fill ingredients, or leave blank to create a custom order.</div>

@@ -1,0 +1,356 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if recipe %}Edit{% else %}Add{% endif %} Recipe - Cookie Manager
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">{% if recipe %}Edit{% else %}Add{% endif %} Recipe</h1>
+    <a href="{{ url_for('recipes.list_recipes') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Recipes
+    </a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Recipe Details</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('recipes.edit_recipe', recipe_id=recipe.id) if recipe else url_for('recipes.add_recipe') }}" method="post" enctype="multipart/form-data" id="recipeForm">
+                    <div class="mb-3">
+                        <label for="name" class="form-label required-field">Recipe Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required value="{{ recipe.name if recipe else '' }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3">{{ recipe.description if recipe else '' }}</textarea>
+                        <div class="form-text">Brief description of the recipe</div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="cookie_size" class="form-label required-field">Cookie Size</label>
+                            <select class="form-select" id="cookie_size" name="cookie_size" required>
+                                <option value="mini" {% if recipe and recipe.cookie_size == 'mini' %}selected{% endif %}>Mini</option>
+                                <option value="regular" {% if recipe and recipe.cookie_size == 'regular' %}selected{% endif %}>Regular</option>
+                                <option value="large" {% if recipe and recipe.cookie_size == 'large' %}selected{% endif %}>Large</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="dough_weight_per_cookie_g" class="form-label required-field">Dough Weight/Cookie</label>
+                            <div class="input-group">
+                                <input type="number" step="0.1" min="0" class="form-control" id="dough_weight_per_cookie_g" name="dough_weight_per_cookie_g" required
+                                       value="{{ recipe.dough_weight_per_cookie_g if recipe else '' }}">
+                                <span class="input-group-text">grams</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="yield_cookies" class="form-label required-field">Batch Yield</label>
+                            <div class="input-group">
+                                <input type="number" step="1" min="1" class="form-control" id="yield_cookies" name="yield_cookies" required
+                                       value="{{ recipe.yield_cookies if recipe else '' }}">
+                                <span class="input-group-text">cookies</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Recipe Image</label>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        <div class="form-text">Upload an image of the cookies (optional)</div>
+                        
+                        {% if recipe and recipe.image_path %}
+                        <div class="mt-2">
+                            <label class="form-label">Current Image:</label>
+                            <div>
+                                <img src="{{ url_for('static_files', filename=recipe.image_path) }}" alt="{{ recipe.name }}" 
+                                     class="img-thumbnail" style="max-height: 150px;">
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <label class="form-label required-field">Ingredients</label>
+                            <button type="button" class="btn btn-sm btn-outline-success" id="addIngredientBtn">
+                                <i class="bi bi-plus-lg"></i> Add Ingredient
+                            </button>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="ingredientsTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50%;">Ingredient</th>
+                                        <th>Amount</th>
+                                        <th style="width: 80px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if recipe and recipe.ingredients %}
+                                        {% for ri in recipe.ingredients %}
+                                            <tr class="ingredient-row">
+                                                <td>
+                                                    <select class="form-select ingredient-select" name="ingredient_id[]" required>
+                                                        <option value="">Select Ingredient</option>
+                                                        {% for ingredient in ingredients %}
+                                                            <option value="{{ ingredient.id }}" 
+                                                                    data-unit="{{ ingredient.default_unit }}"
+                                                                    {% if ingredient.id == ri.ingredient_id %}selected{% endif %}>
+                                                                {{ ingredient.name }}
+                                                            </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <div class="input-group">
+                                                        <input type="number" step="0.1" min="0" class="form-control quantity-input" 
+                                                               name="ingredient_quantity[]" required value="{{ ri.quantity }}">
+                                                        <span class="input-group-text unit-label">{{ ri.ingredient.default_unit }}</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger remove-ingredient">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr class="ingredient-row">
+                                            <td>
+                                                <select class="form-select ingredient-select" name="ingredient_id[]" required>
+                                                    <option value="">Select Ingredient</option>
+                                                    {% for ingredient in ingredients %}
+                                                        <option value="{{ ingredient.id }}" data-unit="{{ ingredient.default_unit }}">
+                                                            {{ ingredient.name }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <div class="input-group">
+                                                    <input type="number" step="0.1" min="0" class="form-control quantity-input" 
+                                                           name="ingredient_quantity[]" required>
+                                                    <span class="input-group-text unit-label">units</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-outline-danger remove-ingredient">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="ingredientsError" class="text-danger d-none">
+                            At least one ingredient is required
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Recipe Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="4">{{ recipe.notes if recipe else '' }}</textarea>
+                        <div class="form-text">Add preparation instructions, tips, or any other notes</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('recipes.list_recipes') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if recipe %}Update{% else %}Add{% endif %} Recipe
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Recipe Tips</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    Precise measurements will help with accurate cost calculations.
+                </div>
+                
+                <h6>Cookie Sizes:</h6>
+                <ul>
+                    <li><strong>Mini:</strong> Small bite-size cookies (typically 10-15g of dough)</li>
+                    <li><strong>Regular:</strong> Standard cookies (typically 25-35g of dough)</li>
+                    <li><strong>Large:</strong> Larger cookies (typically 50-60g of dough)</li>
+                </ul>
+                
+                <h6>Tips:</h6>
+                <ul>
+                    <li>Add all ingredients for accurate costing</li>
+                    <li>Include preparation instructions in the notes</li>
+                    <li>Specify baking time and temperature</li>
+                </ul>
+                
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Don't forget to include small ingredients like salt and baking soda!
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ingredientsTable = document.getElementById('ingredientsTable');
+    const addIngredientBtn = document.getElementById('addIngredientBtn');
+    const recipeForm = document.getElementById('recipeForm');
+    const ingredientsError = document.getElementById('ingredientsError');
+    
+    // Add new ingredient row
+    addIngredientBtn.addEventListener('click', function() {
+        const tbody = ingredientsTable.querySelector('tbody');
+        const newRow = document.createElement('tr');
+        newRow.className = 'ingredient-row';
+        
+        // Get all available ingredients
+        const ingredientOptions = Array.from(document.querySelectorAll('.ingredient-select option'))
+            .filter(option => option.value) // Filter out the placeholder
+            .map(option => {
+                return {
+                    value: option.value,
+                    text: option.textContent,
+                    unit: option.dataset.unit
+                };
+            });
+        
+        // Create options HTML
+        const optionsHtml = ingredientOptions.map(opt => 
+            `<option value="${opt.value}" data-unit="${opt.unit}">${opt.text}</option>`
+        ).join('');
+        
+        newRow.innerHTML = `
+            <td>
+                <select class="form-select ingredient-select" name="ingredient_id[]" required>
+                    <option value="">Select Ingredient</option>
+                    ${optionsHtml}
+                </select>
+            </td>
+            <td>
+                <div class="input-group">
+                    <input type="number" step="0.1" min="0" class="form-control quantity-input" 
+                           name="ingredient_quantity[]" required>
+                    <span class="input-group-text unit-label">units</span>
+                </div>
+            </td>
+            <td>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-ingredient">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(newRow);
+        
+        // Add event listeners to the new row
+        attachRowEventListeners(newRow);
+    });
+    
+    // Function to attach event listeners to a row
+    function attachRowEventListeners(row) {
+        const selectEl = row.querySelector('.ingredient-select');
+        const removeBtn = row.querySelector('.remove-ingredient');
+        
+        // Update unit when ingredient changes
+        selectEl.addEventListener('change', function() {
+            const unitLabel = row.querySelector('.unit-label');
+            const selectedOption = this.options[this.selectedIndex];
+            
+            if (selectedOption && selectedOption.dataset.unit) {
+                unitLabel.textContent = selectedOption.dataset.unit;
+            } else {
+                unitLabel.textContent = 'units';
+            }
+        });
+        
+        // Remove row
+        removeBtn.addEventListener('click', function() {
+            row.remove();
+        });
+    }
+    
+    // Attach event listeners to existing rows
+    document.querySelectorAll('.ingredient-row').forEach(row => {
+        attachRowEventListeners(row);
+    });
+    
+    // Form validation
+    recipeForm.addEventListener('submit', function(e) {
+        const ingredientRows = document.querySelectorAll('.ingredient-row');
+        
+        if (ingredientRows.length === 0) {
+            e.preventDefault();
+            ingredientsError.classList.remove('d-none');
+            return;
+        }
+        
+        let valid = false;
+        ingredientRows.forEach(row => {
+            const select = row.querySelector('select');
+            const input = row.querySelector('input');
+            
+            if (select.value && parseFloat(input.value) > 0) {
+                valid = true;
+            }
+        });
+        
+        if (!valid) {
+            e.preventDefault();
+            ingredientsError.classList.remove('d-none');
+        } else {
+            ingredientsError.classList.add('d-none');
+        }
+    });
+    
+    // Calculate total dough weight
+    const weightInput = document.getElementById('dough_weight_per_cookie_g');
+    const yieldInput = document.getElementById('yield_cookies');
+    
+    [weightInput, yieldInput].forEach(input => {
+        input.addEventListener('input', calculateTotalWeight);
+    });
+    
+    function calculateTotalWeight() {
+        const weight = parseFloat(weightInput.value) || 0;
+        const yield_ = parseInt(yieldInput.value) || 0;
+        
+        if (weight > 0 && yield_ > 0) {
+            const totalWeight = weight * yield_;
+            console.log(`Total dough weight: ${totalWeight}g`);
+            // You can display this somewhere if needed
+        }
+    }
+});
+</script>
+{% endblock %}

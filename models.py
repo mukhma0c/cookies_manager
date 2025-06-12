@@ -72,6 +72,7 @@ class Recipe(db.Model):
     dough_weight_per_cookie_g = db.Column(db.Float, nullable=False)
     yield_cookies = db.Column(db.Integer)  # standard batch yield
     notes = db.Column(db.Text)
+    image_path = db.Column(db.String(255))
     
     # Relationships
     ingredients = db.relationship('RecipeIngredient', back_populates='recipe', cascade='all, delete-orphan')
