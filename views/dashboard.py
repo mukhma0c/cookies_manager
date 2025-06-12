@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template
-from models import Customer, Recipe, Order, Ingredient, Packaging, OrderIngredient, OrderPackaging
+from models import db, Customer, Recipe, Order, Ingredient, Packaging, OrderIngredient, OrderPackaging
 from cost_helpers import get_low_stock_items
 from sqlalchemy import func
 from datetime import datetime, timedelta
