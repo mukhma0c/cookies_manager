@@ -11,6 +11,7 @@ def register_blueprints(app):
     from views.purchases import purchases_bp
     from views.recipes import recipes_bp
     from views.reports import reports_bp
+    from views.customers import customers_bp
     
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(orders_bp)
@@ -18,3 +19,4 @@ def register_blueprints(app):
     app.register_blueprint(purchases_bp)
     app.register_blueprint(recipes_bp)
     app.register_blueprint(reports_bp)
+    app.register_blueprint(customers_bp)

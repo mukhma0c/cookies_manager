@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Customers - Cookie Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">Customers</h1>
+    <a href="{{ url_for('orders.new_order_step1') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> New Order
+    </a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="card">
+    <div class="card-header bg-white">
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" id="customerSearch" class="form-control" placeholder="Search customers...">
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Phone</th>
+                        <th>Orders</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if customers %}
+                        {% for customer in customers %}
+                            <tr>
+                                <td>{{ customer.name }}</td>
+                                <td>
+                                    <span class="badge {{ 'bg-primary' if customer.customer_type == 'family' else 'bg-success' if customer.customer_type == 'friend' else 'bg-info' }}">
+                                        {{ customer.customer_type|capitalize }}
+                                    </span>
+                                </td>
+                                <td>{{ customer.phone or 'N/A' }}</td>
+                                <td>{{ customer.orders|length }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('customers.edit_customer', customer_id=customer.id) }}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        {% if not customer.orders %}
+                                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteCustomerModal{{ customer.id }}">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if not customer.orders %}
+                                        <div class="modal fade" id="deleteCustomerModal{{ customer.id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Confirm Delete</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>Are you sure you want to delete customer <strong>{{ customer.name }}</strong>?</p>
+                                                        <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <form action="{{ url_for('customers.delete_customer', customer_id=customer.id) }}" method="post">
+                                                            <button type="submit" class="btn btn-danger">Delete Customer</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <div class="empty-state">
+                                    <i class="bi bi-people"></i>
+                                    <h5>No Customers Found</h5>
+                                    <p class="text-muted">Create an order with a new customer to get started.</p>
+                                    <a href="{{ url_for('orders.new_order_step1') }}" class="btn btn-primary">Create Order</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Simple search functionality
+    const searchInput = document.getElementById('customerSearch');
+    const table = document.querySelector('table');
+    const rows = table.querySelectorAll('tbody tr');
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

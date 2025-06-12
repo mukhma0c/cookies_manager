@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Customer - Cookie Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">Edit Customer</h1>
+    <a href="{{ url_for('customers.list_customers') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Customers
+    </a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Customer Details</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('customers.edit_customer', customer_id=customer.id) }}" method="post">
+                    <div class="mb-3">
+                        <label for="name" class="form-label required-field">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required value="{{ customer.name }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="customer_type" class="form-label required-field">Customer Type</label>
+                        <select class="form-select" id="customer_type" name="customer_type" required>
+                            <option value="family" {% if customer.customer_type == 'family' %}selected{% endif %}>Family</option>
+                            <option value="friend" {% if customer.customer_type == 'friend' %}selected{% endif %}>Friend</option>
+                            <option value="store" {% if customer.customer_type == 'store' %}selected{% endif %}>Store</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="text" class="form-control" id="phone" name="phone" value="{{ customer.phone or '' }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3">{{ customer.notes or '' }}</textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('customers.list_customers') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Update Customer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Customer Information</h5>
+            </div>
+            <div class="card-body">
+                {% if customer.orders %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        This customer has {{ customer.orders|length }} orders.
+                    </div>
+                    <p>This customer cannot be deleted because they have order history.</p>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        This customer has no orders.
+                    </div>
+                    <p>You can delete this customer if they were created by mistake.</p>
+                    <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteCustomerModal">
+                        <i class="bi bi-trash me-2"></i> Delete Customer
+                    </button>
+                    
+                    <!-- Delete Confirmation Modal -->
+                    <div class="modal fade" id="deleteCustomerModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Confirm Delete</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Are you sure you want to delete customer <strong>{{ customer.name }}</strong>?</p>
+                                    <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <form action="{{ url_for('customers.delete_customer', customer_id=customer.id) }}" method="post">
+                                        <button type="submit" class="btn btn-danger">Delete Customer</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
