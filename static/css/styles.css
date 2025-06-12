@@ -1,24 +1,106 @@
 /* Main CSS file for Cookie Manager */
 
 /* High contrast mode styles */
-.high-contrast {
-    --bs-primary: #005cbf;
-    --bs-primary-rgb: 0, 92, 191;
+.high-contrast-mode {
+    --bs-primary: #0056b3;
+    --bs-primary-rgb: 0, 86, 179;
+    --bs-secondary: #343a40;
+    --bs-success: #006400;
+    --bs-danger: #8b0000;
+    --bs-warning: #8B4000;
+    --bs-info: #0F52BA;
+    
     --bs-body-color: #000;
     --bs-body-bg: #fff;
     color-scheme: light;
 }
 
-.high-contrast .card,
-.high-contrast .table,
-.high-contrast .alert,
-.high-contrast .modal-content {
+.high-contrast-mode .card,
+.high-contrast-mode .table,
+.high-contrast-mode .alert,
+.high-contrast-mode .modal-content {
     border-width: 2px;
 }
 
-.high-contrast .form-control,
-.high-contrast .btn {
+.high-contrast-mode .form-control,
+.high-contrast-mode .btn {
     border-width: 2px;
+}
+
+.high-contrast-mode .form-label.required-field::after {
+    color: #8b0000;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.high-contrast-mode .text-muted {
+    color: #333 !important;
+}
+
+.high-contrast-mode .btn-outline-primary {
+    border-width: 2px;
+    color: #0056b3;
+    border-color: #0056b3;
+}
+
+.high-contrast-mode .btn-outline-primary:hover {
+    color: #fff;
+    background-color: #0056b3;
+}
+
+.high-contrast-mode .progress-bar {
+    color: #fff;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+}
+
+/* Dark mode styles */
+.dark-mode {
+    --bs-body-color: #e9ecef;
+    --bs-body-bg: #343a40;
+    color-scheme: dark;
+}
+
+.dark-mode .card {
+    background-color: #2c3034;
+    border-color: #495057;
+}
+
+.dark-mode .card-header {
+    background-color: #212529 !important;
+    border-color: #495057;
+}
+
+.dark-mode .table {
+    color: #e9ecef;
+}
+
+.dark-mode .table-hover tbody tr:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.075);
+}
+
+.dark-mode .navbar {
+    background-color: #212529 !important;
+}
+
+.dark-mode .form-control,
+.dark-mode .form-select {
+    background-color: #2c3034;
+    border-color: #495057;
+    color: #e9ecef;
+}
+
+.dark-mode .modal-content {
+    background-color: #343a40;
+    border-color: #495057;
+}
+
+.dark-mode .text-muted {
+    color: #adb5bd !important;
+}
+
+.dark-mode .bg-light {
+    background-color: #2c3034 !important;
 }
 
 /* Helper utilities */

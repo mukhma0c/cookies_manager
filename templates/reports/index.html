@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports - Cookie Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">Reports & Analytics</h1>
+</div>
+
+<div class="row mb-4">
+    <!-- Overview cards -->
+    <div class="col-md-3">
+        <div class="card card-dashboard border-primary h-100">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Total Revenue</h6>
+                <h2 class="card-title text-primary">${{ (total_revenue_cents / 100)|round(2) }}</h2>
+                <p class="card-text text-muted">
+                    All-time revenue from {{ orders_count }} orders
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-dashboard border-success h-100">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Total Profit</h6>
+                <h2 class="card-title text-success">${{ (total_profit_cents / 100)|round(2) }}</h2>
+                <p class="card-text text-muted">
+                    Profit margin: {{ profit_margin|round(1) }}%
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-dashboard border-warning h-100">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Total Cost</h6>
+                <h2 class="card-title text-warning">${{ (total_cost_cents / 100)|round(2) }}</h2>
+                <p class="card-text text-muted">
+                    Ingredients & packaging costs
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-dashboard border-info h-100">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Total Cookies</h6>
+                <h2 class="card-title text-info">{{ total_cookies }}</h2>
+                <p class="card-text text-muted">
+                    Cookies baked to date
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Report buttons grid -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Available Reports</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-graph-up-arrow text-success me-2"></i> Profit Analysis
+                                </h5>
+                                <p class="card-text">Detailed breakdown of revenue, costs, and profit margins for all orders.</p>
+                                <a href="{{ url_for('reports.profit_report') }}" class="btn btn-primary">View Report</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-box-seam text-primary me-2"></i> Inventory Usage
+                                </h5>
+                                <p class="card-text">Track ingredient and packaging usage with associated costs.</p>
+                                <a href="{{ url_for('reports.inventory_report') }}" class="btn btn-primary">View Report</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-calendar-week text-warning me-2"></i> Trend Analysis
+                                </h5>
+                                <p class="card-text">See how revenue, costs, and profits change over time.</p>
+                                <a href="{{ url_for('reports.trend_report') }}" class="btn btn-primary">View Report</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Top customers and recipes -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Top Customers</h5>
+            </div>
+            <div class="card-body">
+                {% if top_customers %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Orders</th>
+                                    <th>Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for customer in top_customers %}
+                                    <tr>
+                                        <td>{{ customer.display_name }}</td>
+                                        <td>{{ customer.order_count }}</td>
+                                        <td>${{ (customer.revenue / 100)|round(2) }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        No customer data available yet.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Top Recipes</h5>
+            </div>
+            <div class="card-body">
+                {% if top_recipes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Recipe</th>
+                                    <th>Times Used</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for recipe in top_recipes %}
+                                    <tr>
+                                        <td>{{ recipe.name }}</td>
+                                        <td>{{ recipe.order_count }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        No recipe data available yet.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

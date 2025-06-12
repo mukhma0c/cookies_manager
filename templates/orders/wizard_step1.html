@@ -8,25 +8,26 @@
 </div>
 
 <!-- Wizard Progress -->
-<div class="wizard-steps mb-4">
+<div class="wizard-steps mb-4" role="progressbar" aria-label="Order creation steps" aria-valuenow="1" aria-valuemin="1" aria-valuemax="5">
     <div class="wizard-step active">
-        <div class="step-number">1</div>
+        <div class="step-number" aria-hidden="true">1</div>
         <div class="step-title">Customer &amp; Recipe</div>
+        <span class="visually-hidden">Current step: Customer and Recipe</span>
     </div>
     <div class="wizard-step">
-        <div class="step-number">2</div>
+        <div class="step-number" aria-hidden="true">2</div>
         <div class="step-title">Ingredients</div>
     </div>
     <div class="wizard-step">
-        <div class="step-number">3</div>
+        <div class="step-number" aria-hidden="true">3</div>
         <div class="step-title">Bake Outcome</div>
     </div>
     <div class="wizard-step">
-        <div class="step-number">4</div>
+        <div class="step-number" aria-hidden="true">4</div>
         <div class="step-title">Packaging</div>
     </div>
     <div class="wizard-step">
-        <div class="step-number">5</div>
+        <div class="step-number" aria-hidden="true">5</div>
         <div class="step-title">Review &amp; Save</div>
     </div>
 </div>

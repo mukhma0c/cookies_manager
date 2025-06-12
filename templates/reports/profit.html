@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% block title %}Profit Report - Cookie Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">Profit Analysis Report</h1>
+    <div>
+        <a href="{{ url_for('reports.index') }}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left"></i> Back to Reports
+        </a>
+        <a href="{{ url_for('reports.export_profit_csv', period=period) }}" class="btn btn-success">
+            <i class="bi bi-download"></i> Export CSV
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h5 class="card-title mb-0">Profit Summary</h5>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex justify-content-md-end">
+                    <div class="btn-group" role="group" aria-label="Time period filter">
+                        <a href="{{ url_for('reports.profit_report', period='month') }}" 
+                           class="btn btn-outline-primary {{ 'active' if period == 'month' }}">
+                            Month
+                        </a>
+                        <a href="{{ url_for('reports.profit_report', period='3months') }}" 
+                           class="btn btn-outline-primary {{ 'active' if period == '3months' }}">
+                            3 Months
+                        </a>
+                        <a href="{{ url_for('reports.profit_report', period='6months') }}" 
+                           class="btn btn-outline-primary {{ 'active' if period == '6months' }}">
+                            6 Months
+                        </a>
+                        <a href="{{ url_for('reports.profit_report', period='year') }}" 
+                           class="btn btn-outline-primary {{ 'active' if period == 'year' }}">
+                            Year
+                        </a>
+                        <a href="{{ url_for('reports.profit_report', period='all') }}" 
+                           class="btn btn-outline-primary {{ 'active' if period == 'all' }}">
+                            All Time
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle text-muted">Total Revenue</h6>
+                        <h3 class="text-primary">${{ (total_revenue / 100)|round(2) }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle text-muted">Total Cost</h6>
+                        <h3 class="text-danger">${{ (total_cost / 100)|round(2) }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle text-muted">Total Profit</h6>
+                        <h3 class="text-success">${{ (total_profit / 100)|round(2) }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle text-muted">Profit Margin</h6>
+                        <h3 class="text-info">{{ profit_margin|round(1) }}%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Breakdown of costs -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-subtitle text-muted mb-3">Cost Breakdown</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Ingredient Costs:</span>
+                            <strong>${{ (total_ingredient_cost / 100)|round(2) }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Packaging Costs:</span>
+                            <strong>${{ (total_packaging_cost / 100)|round(2) }}</strong>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            {% set ingredient_percent = (total_ingredient_cost / total_cost * 100) if total_cost > 0 else 0 %}
+                            {% set packaging_percent = (total_packaging_cost / total_cost * 100) if total_cost > 0 else 0 %}
+                            <div class="progress-bar bg-warning" role="progressbar" 
+                                 style="width: {{ ingredient_percent }}%" 
+                                 aria-valuenow="{{ ingredient_percent }}" 
+                                 aria-valuemin="0" aria-valuemax="100">
+                                Ingredients
+                            </div>
+                            <div class="progress-bar bg-info" role="progressbar" 
+                                 style="width: {{ packaging_percent }}%" 
+                                 aria-valuenow="{{ packaging_percent }}" 
+                                 aria-valuemin="0" aria-valuemax="100">
+                                Packaging
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-subtitle text-muted mb-3">Profit Analysis</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Revenue:</span>
+                            <strong>${{ (total_revenue / 100)|round(2) }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Costs:</span>
+                            <strong>${{ (total_cost / 100)|round(2) }}</strong>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            {% set cost_percent = (total_cost / total_revenue * 100) if total_revenue > 0 else 0 %}
+                            {% set profit_percent = (total_profit / total_revenue * 100) if total_revenue > 0 else 0 %}
+                            <div class="progress-bar bg-danger" role="progressbar" 
+                                 style="width: {{ cost_percent }}%" 
+                                 aria-valuenow="{{ cost_percent }}" 
+                                 aria-valuemin="0" aria-valuemax="100">
+                                Costs
+                            </div>
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ profit_percent }}%" 
+                                 aria-valuenow="{{ profit_percent }}" 
+                                 aria-valuemin="0" aria-valuemax="100">
+                                Profit
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white">
+        <div class="row align-items-center">
+            <div class="col">
+                <h5 class="card-title mb-0">Order Details</h5>
+            </div>
+            <div class="col-auto">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" id="orderSearch" class="form-control" placeholder="Search orders...">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="ordersTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Recipe</th>
+                        <th>Quantity</th>
+                        <th>Revenue</th>
+                        <th>Cost</th>
+                        <th>Profit</th>
+                        <th>Margin</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if orders %}
+                        {% for order in orders %}
+                            <tr>
+                                <td>{{ order.date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ order.customer }}</td>
+                                <td>{{ order.recipe }}</td>
+                                <td>{{ order.quantity }}</td>
+                                <td>${{ (order.revenue_cents / 100)|round(2) }}</td>
+                                <td>${{ (order.total_cost_cents / 100)|round(2) }}</td>
+                                <td class="{{ 'text-success' if order.profit_cents > 0 else 'text-danger' }}">
+                                    ${{ (order.profit_cents / 100)|round(2) }}
+                                </td>
+                                <td>
+                                    <span class="badge {{ 'bg-success' if order.profit_margin > 20 else 'bg-warning' if order.profit_margin > 0 else 'bg-danger' }}">
+                                        {{ order.profit_margin|round(1) }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('orders.view_order', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4">
+                                <div class="empty-state">
+                                    <i class="bi bi-file-earmark-x"></i>
+                                    <h5>No Orders Found</h5>
+                                    <p class="text-muted">Try a different time period or create some orders.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Simple search functionality for the orders table
+    const searchInput = document.getElementById('orderSearch');
+    const table = document.getElementById('ordersTable');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    
+    searchInput.addEventListener('keyup', function() {
+        const term = searchInput.value.toLowerCase();
+        
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const text = row.textContent.toLowerCase();
+            
+            if (text.indexOf(term) > -1) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

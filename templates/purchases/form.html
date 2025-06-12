@@ -31,10 +31,11 @@
                 <form action="{{ url_for('purchases.edit_purchase', purchase_id=purchase.id) if purchase else url_for('purchases.add_purchase') }}" method="post">
                     <div class="mb-3">
                         <label for="item_type" class="form-label required-field">Item Type</label>
-                        <select class="form-select" id="item_type" name="item_type" required>
+                        <select class="form-select" id="item_type" name="item_type" required aria-describedby="item-type-help">
                             <option value="ingredient" {% if purchase and purchase.item_type == 'ingredient' %}selected{% endif %}>Ingredient</option>
                             <option value="packaging" {% if purchase and purchase.item_type == 'packaging' %}selected{% endif %}>Packaging</option>
                         </select>
+                        <div id="item-type-help" class="form-text">Select whether you're purchasing an ingredient or packaging item.</div>
                     </div>
                     
                     <div class="mb-3">

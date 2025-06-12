@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventory Usage Report - Cookie Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">Inventory Usage Report</h1>
+    <div>
+        <a href="{{ url_for('reports.index') }}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left"></i> Back to Reports
+        </a>
+        <a href="{{ url_for('reports.export_inventory_csv', period=period) }}" class="btn btn-success">
+            <i class="bi bi-download"></i> Export CSV
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h5 class="card-title mb-0">Ingredients Usage</h5>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex justify-content-md-end">
+                    <div class="btn-group" role="group" aria-label="Time period filter">
+                        <a href="{{ url_for('reports.inventory_report', period='month') }}" 
+                           class="btn btn-outline-primary {{ 'active' if period == 'month' }}">
+                            Month
+                        </a>
+                        <a href="{{ url_for('reports.inventory_report', period='3months') }}" 
+                           class="btn btn-outline-primary {{ 'active' if period == '3months' }}">
+                            3 Months
+                        </a>
+                        <a href="{{ url_for('reports.inventory_report', period='6months') }}" 
+                           class="btn btn-outline-primary {{ 'active' if period == '6months' }}">
+                            6 Months
+                        </a>
+                        <a href="{{ url_for('reports.inventory_report', period='year') }}" 
+                           class="btn btn-outline-primary {{ 'active' if period == 'year' }}">
+                            Year
+                        </a>
+                        <a href="{{ url_for('reports.inventory_report', period='all') }}" 
+                           class="btn btn-outline-primary {{ 'active' if period == 'all' }}">
+                            All Time
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="ingredientsTable">
+                <thead>
+                    <tr>
+                        <th>Ingredient</th>
+                        <th>Unit</th>
+                        <th>Amount Used</th>
+                        <th>Total Cost</th>
+                        <th>% of Costs</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if ingredients %}
+                        {% set total_ingredient_costs = ingredients|map(attribute='total_cost')|sum %}
+                        {% for ingredient in ingredients %}
+                            <tr>
+                                <td>{{ ingredient.name }}</td>
+                                <td>{{ ingredient.default_unit }}</td>
+                                <td>{{ ingredient.amount_used|round(2) }} {{ ingredient.default_unit }}</td>
+                                <td>${{ (ingredient.total_cost / 100)|round(2) }}</td>
+                                <td>
+                                    {% if total_ingredient_costs > 0 %}
+                                        {% set percentage = (ingredient.total_cost / total_ingredient_costs) * 100 %}
+                                        <div class="progress" style="height: 15px;">
+                                            <div class="progress-bar bg-primary" role="progressbar" 
+                                                style="width: {{ percentage }}%" 
+                                                aria-valuenow="{{ percentage }}" 
+                                                aria-valuemin="0" aria-valuemax="100">
+                                                {{ percentage|round(1) }}%
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="progress" style="height: 15px;">
+                                            <div class="progress-bar" role="progressbar" style="width: 0%">0%</div>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('purchases.add_purchase') }}?item_type=ingredient&item_id={{ ingredient.id }}" class="btn btn-sm btn-outline-primary">
+                                        Purchase
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <div class="empty-state">
+                                    <i class="bi bi-cart-x"></i>
+                                    <h5>No Ingredient Usage Data</h5>
+                                    <p class="text-muted">Create some orders to see ingredient usage statistics.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="card-title mb-0">Packaging Usage</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="packagingTable">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Unit</th>
+                        <th>Quantity Used</th>
+                        <th>Total Cost</th>
+                        <th>% of Costs</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if packaging %}
+                        {% set total_packaging_costs = packaging|map(attribute='total_cost')|sum %}
+                        {% for item in packaging %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.default_unit }}</td>
+                                <td>{{ item.quantity_used|round(2) }} {{ item.default_unit }}</td>
+                                <td>${{ (item.total_cost / 100)|round(2) }}</td>
+                                <td>
+                                    {% if total_packaging_costs > 0 %}
+                                        {% set percentage = (item.total_cost / total_packaging_costs) * 100 %}
+                                        <div class="progress" style="height: 15px;">
+                                            <div class="progress-bar bg-success" role="progressbar" 
+                                                style="width: {{ percentage }}%" 
+                                                aria-valuenow="{{ percentage }}" 
+                                                aria-valuemin="0" aria-valuemax="100">
+                                                {{ percentage|round(1) }}%
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="progress" style="height: 15px;">
+                                            <div class="progress-bar" role="progressbar" style="width: 0%">0%</div>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('purchases.add_purchase') }}?item_type=packaging&item_id={{ item.id }}" class="btn btn-sm btn-outline-primary">
+                                        Purchase
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <div class="empty-state">
+                                    <i class="bi bi-box-seam"></i>
+                                    <h5>No Packaging Usage Data</h5>
+                                    <p class="text-muted">Create some orders to see packaging usage statistics.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize sort tables if needed
+});
+</script>
+{% endblock %}
