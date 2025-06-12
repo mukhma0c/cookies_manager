@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
-from models import db, Ingredient, Packaging
+from models import db, Ingredient, Packaging, Purchase, OrderIngredient, OrderPackaging
+from datetime import datetime
+from sqlalchemy import func
 import os
 from werkzeug.utils import secure_filename
 import uuid
@@ -236,3 +238,167 @@ def delete_packaging(packaging_id):
         flash(f'Error deleting packaging: {str(e)}', 'danger')
     
     return redirect(url_for('inventory.list_packaging'))
+
+@inventory_bp.route('/adjust', methods=['GET'])
+def adjust_inventory():
+    """Adjust inventory levels for ingredients and packaging."""
+    # Calculate current ingredient stock levels
+    ingredients_stock = []
+    
+    # Get all ingredients
+    ingredients = Ingredient.query.order_by(Ingredient.name).all()
+    
+    for ingredient in ingredients:
+        # Calculate total purchased
+        total_purchased = db.session.query(func.sum(Purchase.quantity)).filter(
+            Purchase.item_type == 'ingredient',
+            Purchase.item_id == ingredient.id
+        ).scalar() or 0
+        
+        # Calculate total used in orders
+        total_used = db.session.query(func.sum(OrderIngredient.amount_used)).filter(
+            OrderIngredient.ingredient_id == ingredient.id
+        ).scalar() or 0
+        
+        # Current stock level
+        current_stock = total_purchased - total_used
+        
+        ingredients_stock.append({
+            'ingredient': ingredient,
+            'current_stock': current_stock
+        })
+    
+    # Calculate current packaging stock levels
+    packaging_stock = []
+    
+    # Get all packaging items
+    packaging_items = Packaging.query.order_by(Packaging.name).all()
+    
+    for packaging in packaging_items:
+        # Calculate total purchased
+        total_purchased = db.session.query(func.sum(Purchase.quantity)).filter(
+            Purchase.item_type == 'packaging',
+            Purchase.item_id == packaging.id
+        ).scalar() or 0
+        
+        # Calculate total used in orders
+        total_used = db.session.query(func.sum(OrderPackaging.quantity_used)).filter(
+            OrderPackaging.packaging_id == packaging.id
+        ).scalar() or 0
+        
+        # Current stock level
+        current_stock = total_purchased - total_used
+        
+        packaging_stock.append({
+            'packaging': packaging,
+            'current_stock': current_stock
+        })
+    
+    return render_template(
+        'inventory/adjust.html',
+        ingredients=ingredients_stock,
+        packaging=packaging_stock
+    )
+
+@inventory_bp.route('/adjust/process', methods=['POST'])
+def process_adjustment():
+    """Process inventory adjustments and create adjustment records."""
+    adjustment_count = 0
+    
+    # Process ingredient adjustments
+    for key, value in request.form.items():
+        if key.startswith('ingredient_'):
+            try:
+                ingredient_id = int(key.replace('ingredient_', ''))
+                actual_stock = float(value)
+                
+                # Get the ingredient
+                ingredient = Ingredient.query.get_or_404(ingredient_id)
+                
+                # Calculate current stock
+                total_purchased = db.session.query(func.sum(Purchase.quantity)).filter(
+                    Purchase.item_type == 'ingredient',
+                    Purchase.item_id == ingredient_id
+                ).scalar() or 0
+                
+                total_used = db.session.query(func.sum(OrderIngredient.amount_used)).filter(
+                    OrderIngredient.ingredient_id == ingredient_id
+                ).scalar() or 0
+                
+                current_stock = total_purchased - total_used
+                
+                # Calculate adjustment needed
+                adjustment = actual_stock - current_stock
+                
+                # If there's an adjustment needed, create a purchase record
+                if abs(adjustment) > 0.001:  # Use small epsilon to avoid floating point issues
+                    purchase = Purchase(
+                        purchase_date=datetime.utcnow().date(),
+                        item_type='ingredient',
+                        item_id=ingredient_id,
+                        quantity=adjustment,
+                        unit=ingredient.default_unit,
+                        total_cost_cents=0,  # No cost for adjustments
+                        notes=f"Inventory adjustment: {'Addition' if adjustment > 0 else 'Reduction'}"
+                    )
+                    
+                    # Set unit cost to 0
+                    purchase.unit_cost_cents = 0
+                    
+                    db.session.add(purchase)
+                    adjustment_count += 1
+            except (ValueError, TypeError):
+                continue
+        
+        # Process packaging adjustments
+        elif key.startswith('packaging_'):
+            try:
+                packaging_id = int(key.replace('packaging_', ''))
+                actual_stock = float(value)
+                
+                # Get the packaging
+                packaging = Packaging.query.get_or_404(packaging_id)
+                
+                # Calculate current stock
+                total_purchased = db.session.query(func.sum(Purchase.quantity)).filter(
+                    Purchase.item_type == 'packaging',
+                    Purchase.item_id == packaging_id
+                ).scalar() or 0
+                
+                total_used = db.session.query(func.sum(OrderPackaging.quantity_used)).filter(
+                    OrderPackaging.packaging_id == packaging_id
+                ).scalar() or 0
+                
+                current_stock = total_purchased - total_used
+                
+                # Calculate adjustment needed
+                adjustment = actual_stock - current_stock
+                
+                # If there's an adjustment needed, create a purchase record
+                if abs(adjustment) > 0.001:  # Use small epsilon to avoid floating point issues
+                    purchase = Purchase(
+                        purchase_date=datetime.utcnow().date(),
+                        item_type='packaging',
+                        item_id=packaging_id,
+                        quantity=adjustment,
+                        unit=packaging.default_unit,
+                        total_cost_cents=0,  # No cost for adjustments
+                        notes=f"Inventory adjustment: {'Addition' if adjustment > 0 else 'Reduction'}"
+                    )
+                    
+                    # Set unit cost to 0
+                    purchase.unit_cost_cents = 0
+                    
+                    db.session.add(purchase)
+                    adjustment_count += 1
+            except (ValueError, TypeError):
+                continue
+    
+    # Commit changes if any adjustments were made
+    if adjustment_count > 0:
+        db.session.commit()
+        flash(f'Successfully recorded {adjustment_count} inventory adjustments.', 'success')
+    else:
+        flash('No inventory adjustments were needed.', 'info')
+    
+    return redirect(url_for('inventory.adjust_inventory'))

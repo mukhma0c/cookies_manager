@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}Adjust Inventory - Cookie Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">Inventory Adjustment</h1>
+    <div>
+        <a href="{{ url_for('inventory.list_ingredients') }}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left"></i> Back to Ingredients
+        </a>
+        <a href="{{ url_for('inventory.list_packaging') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Packaging
+        </a>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="card-title mb-0">About Inventory Adjustment</h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            <strong>How this works:</strong> The system tracks inventory by adding purchases and subtracting order usage. 
+            Use this page to correct inventory when there are discrepancies (spillage, waste, initial inventory setup, etc).
+        </div>
+        <p>For each item, you can see:</p>
+        <ul>
+            <li><strong>Current Calculated Stock:</strong> What the system thinks you have based on purchases minus usage</li>
+            <li><strong>Actual Stock:</strong> Enter the actual amount you have on hand</li>
+            <li><strong>Adjustment Amount:</strong> The difference that will be recorded</li>
+        </ul>
+    </div>
+</div>
+
+<form action="{{ url_for('inventory.process_adjustment') }}" method="post">
+    <!-- Ingredients Table -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="card-title mb-0">Ingredients</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Ingredient</th>
+                            <th>Unit</th>
+                            <th>Current Calculated Stock</th>
+                            <th>Actual Stock</th>
+                            <th>Adjustment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in ingredients %}
+                            <tr>
+                                <td>{{ item.ingredient.name }}</td>
+                                <td>{{ item.ingredient.default_unit }}</td>
+                                <td>{{ item.current_stock|round(2) }} {{ item.ingredient.default_unit }}</td>
+                                <td>
+                                    <div class="input-group" style="max-width: 200px;">
+                                        <input type="number" class="form-control actual-stock" 
+                                               id="ingredient_{{ item.ingredient.id }}" 
+                                               name="ingredient_{{ item.ingredient.id }}" 
+                                               value="{{ item.current_stock|round(2) }}" 
+                                               step="0.01" min="0"
+                                               data-current="{{ item.current_stock }}">
+                                        <span class="input-group-text">{{ item.ingredient.default_unit }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="adjustment-value" id="adjustment_ingredient_{{ item.ingredient.id }}">0</span>
+                                    {{ item.ingredient.default_unit }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Packaging Table -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="card-title mb-0">Packaging</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Unit</th>
+                            <th>Current Calculated Stock</th>
+                            <th>Actual Stock</th>
+                            <th>Adjustment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in packaging %}
+                            <tr>
+                                <td>{{ item.packaging.name }}</td>
+                                <td>{{ item.packaging.default_unit }}</td>
+                                <td>{{ item.current_stock|round(2) }} {{ item.packaging.default_unit }}</td>
+                                <td>
+                                    <div class="input-group" style="max-width: 200px;">
+                                        <input type="number" class="form-control actual-stock" 
+                                               id="packaging_{{ item.packaging.id }}" 
+                                               name="packaging_{{ item.packaging.id }}" 
+                                               value="{{ item.current_stock|round(2) }}" 
+                                               step="0.01" min="0"
+                                               data-current="{{ item.current_stock }}">
+                                        <span class="input-group-text">{{ item.packaging.default_unit }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="adjustment-value" id="adjustment_packaging_{{ item.packaging.id }}">0</span>
+                                    {{ item.packaging.default_unit }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-flex justify-content-between mb-4">
+        <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">Reset</button>
+        <button type="submit" class="btn btn-primary">Save Adjustments</button>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const actualStockInputs = document.querySelectorAll('.actual-stock');
+    
+    // Function to update adjustment values
+    function updateAdjustment(input) {
+        const currentStock = parseFloat(input.dataset.current);
+        const actualStock = parseFloat(input.value) || 0;
+        const adjustment = actualStock - currentStock;
+        
+        // Get the corresponding adjustment display element
+        const id = input.id;
+        const adjustmentEl = document.getElementById('adjustment_' + id);
+        
+        // Update the adjustment value
+        adjustmentEl.textContent = adjustment.toFixed(2);
+        
+        // Add visual indicator for the adjustment
+        if (adjustment > 0) {
+            adjustmentEl.className = 'adjustment-value text-success';
+            adjustmentEl.textContent = '+' + adjustmentEl.textContent;
+        } else if (adjustment < 0) {
+            adjustmentEl.className = 'adjustment-value text-danger';
+        } else {
+            adjustmentEl.className = 'adjustment-value';
+        }
+    }
+    
+    // Add event listeners to each input
+    actualStockInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            updateAdjustment(this);
+        });
+        
+        // Initialize
+        updateAdjustment(input);
+    });
+    
+    // Expose resetForm to global scope
+    window.resetForm = function() {
+        actualStockInputs.forEach(input => {
+            input.value = input.dataset.current;
+            updateAdjustment(input);
+        });
+    };
+});
+</script>
+{% endblock %}
