@@ -47,28 +47,41 @@ def index():
         Order.order_date < thirty_days_ago
     ).first()
     
-    # Calculate costs and profit
-    costs_query = db.session.query(
-        func.sum(OrderIngredient.cost_at_time_of_use_cents).label('ingredient_cost'),
-        func.sum(OrderPackaging.cost_at_time_of_use_cents).label('packaging_cost')
+    # Calculate ingredient costs
+    ingredient_costs_query = db.session.query(
+        func.sum(OrderIngredient.cost_at_time_of_use_cents).label('ingredient_cost')
     ).join(Order, Order.id == OrderIngredient.order_id) \
-     .join(OrderPackaging, Order.id == OrderPackaging.order_id, isouter=True) \
      .filter(Order.order_date >= thirty_days_ago)
     
-    current_costs = costs_query.first()
-    
-    # Calculate previous period costs
-    previous_costs_query = db.session.query(
-        func.sum(OrderIngredient.cost_at_time_of_use_cents).label('ingredient_cost'),
+    # Calculate packaging costs
+    packaging_costs_query = db.session.query(
         func.sum(OrderPackaging.cost_at_time_of_use_cents).label('packaging_cost')
+    ).join(Order, Order.id == OrderPackaging.order_id) \
+     .filter(Order.order_date >= thirty_days_ago)
+    
+    current_ingredient_costs = ingredient_costs_query.first()
+    current_packaging_costs = packaging_costs_query.first()
+    
+    # Calculate previous period ingredient costs
+    previous_ingredient_costs_query = db.session.query(
+        func.sum(OrderIngredient.cost_at_time_of_use_cents).label('ingredient_cost')
     ).join(Order, Order.id == OrderIngredient.order_id) \
-     .join(OrderPackaging, Order.id == OrderPackaging.order_id, isouter=True) \
      .filter(
         Order.order_date >= sixty_days_ago,
         Order.order_date < thirty_days_ago
      )
     
-    previous_costs = previous_costs_query.first()
+    # Calculate previous period packaging costs
+    previous_packaging_costs_query = db.session.query(
+        func.sum(OrderPackaging.cost_at_time_of_use_cents).label('packaging_cost')
+    ).join(Order, Order.id == OrderPackaging.order_id) \
+     .filter(
+        Order.order_date >= sixty_days_ago,
+        Order.order_date < thirty_days_ago
+     )
+    
+    previous_ingredient_costs = previous_ingredient_costs_query.first()
+    previous_packaging_costs = previous_packaging_costs_query.first()
     
     # Dashboard metrics
     revenue = current_period_stats.revenue or 0
@@ -76,8 +89,8 @@ def index():
     cookies_baked = current_period_stats.cookies_baked or 0
     
     # Cost and profit calculations
-    ingredient_cost = current_costs.ingredient_cost or 0
-    packaging_cost = current_costs.packaging_cost or 0
+    ingredient_cost = current_ingredient_costs.ingredient_cost or 0
+    packaging_cost = current_packaging_costs.packaging_cost or 0
     total_cost = ingredient_cost + packaging_cost
     profit = revenue - total_cost
     
@@ -86,8 +99,8 @@ def index():
     prev_order_count = previous_period_stats.order_count or 0
     prev_cookies_baked = previous_period_stats.cookies_baked or 0
     
-    prev_ingredient_cost = previous_costs.ingredient_cost or 0
-    prev_packaging_cost = previous_costs.packaging_cost or 0
+    prev_ingredient_cost = previous_ingredient_costs.ingredient_cost or 0
+    prev_packaging_cost = previous_packaging_costs.packaging_cost or 0
     prev_total_cost = prev_ingredient_cost + prev_packaging_cost
     prev_profit = prev_revenue - prev_total_cost
     
