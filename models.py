@@ -109,16 +109,17 @@ class Purchase(db.Model):
     quantity = db.Column(db.Float, nullable=False)
     unit = db.Column(db.String(10), nullable=False)
     total_cost_cents = db.Column(db.Integer, nullable=False)
-    unit_cost_cents = db.Column(db.Integer)  # Generated column in app layer
+    unit_cost_cents = db.Column(db.Integer)  # Stored as millicents (1/1000 of a cent) for precision
     notes = db.Column(db.Text)
     
     def __repr__(self):
         return f'<Purchase {self.id} - {self.item_type}:{self.item_id}>'
     
     def calculate_unit_cost(self):
-        """Calculate unit cost from total cost and quantity."""
+        """Calculate unit cost from total cost and quantity. Stores in millicents for precision."""
         if self.quantity and self.total_cost_cents:
-            self.unit_cost_cents = round(self.total_cost_cents / self.quantity)
+            # Store as millicents (1/1000 of a cent) for precision with small unit costs
+            self.unit_cost_cents = int((self.total_cost_cents / self.quantity) * 1000)
 
 
 class Order(db.Model):

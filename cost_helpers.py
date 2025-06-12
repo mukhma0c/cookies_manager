@@ -11,7 +11,8 @@ def get_latest_unit_cost(item_type, item_id):
         item_id (int): ID of the item
         
     Returns:
-        int: Latest unit cost in cents, or None if no purchase exists
+        int: Latest unit cost in millicents, or None if no purchase exists
+            (Note: 1 cent = 1000 millicents)
     """
     latest_purchase = Purchase.query.filter_by(
         item_type=item_type,
@@ -32,16 +33,18 @@ def calculate_ingredient_cost(ingredient_id, amount):
     Returns:
         int: Cost in cents, or None if no price data exists
     """
-    unit_cost = get_latest_unit_cost('ingredient', ingredient_id)
-    if unit_cost is None:
+    unit_cost_millicents = get_latest_unit_cost('ingredient', ingredient_id)
+    if unit_cost_millicents is None:
         # Fallback to default price if no purchase exists
         ingredient = Ingredient.query.get(ingredient_id)
         if ingredient and ingredient.default_price_per_unit_cents:
-            unit_cost = ingredient.default_price_per_unit_cents
+            # Convert default price (cents) to millicents for consistent calculation
+            unit_cost_millicents = ingredient.default_price_per_unit_cents * 1000
         else:
             return None
     
-    return round(unit_cost * amount)
+    # Calculate cost in millicents, then convert back to cents
+    return int((unit_cost_millicents * amount) / 1000)
 
 
 def calculate_packaging_cost(packaging_id, quantity):
@@ -55,16 +58,18 @@ def calculate_packaging_cost(packaging_id, quantity):
     Returns:
         int: Cost in cents, or None if no price data exists
     """
-    unit_cost = get_latest_unit_cost('packaging', packaging_id)
-    if unit_cost is None:
+    unit_cost_millicents = get_latest_unit_cost('packaging', packaging_id)
+    if unit_cost_millicents is None:
         # Fallback to default price if no purchase exists
         packaging = Packaging.query.get(packaging_id)
         if packaging and packaging.default_price_per_unit_cents:
-            unit_cost = packaging.default_price_per_unit_cents
+            # Convert default price (cents) to millicents for consistent calculation
+            unit_cost_millicents = packaging.default_price_per_unit_cents * 1000
         else:
             return None
     
-    return round(unit_cost * quantity)
+    # Calculate cost in millicents, then convert back to cents
+    return int((unit_cost_millicents * quantity) / 1000)
 
 
 def calculate_order_cost_preview(ingredients, packaging):
