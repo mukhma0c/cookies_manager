@@ -251,24 +251,33 @@ def trend_report():
     ).filter(Order.order_date >= start_date, Order.order_date <= end_date) \
      .group_by('period').order_by('period').all()
     
-    # Get costs by time period
-    cost_data = db.session.query(
+    # Get ingredient costs by time period
+    ingredient_cost_data = db.session.query(
         date_extract.label('period'),
-        func.sum(OrderIngredient.cost_at_time_of_use_cents).label('ingredient_cost'),
+        func.sum(OrderIngredient.cost_at_time_of_use_cents).label('ingredient_cost')
+    ).select_from(OrderIngredient).join(Order) \
+     .filter(Order.order_date >= start_date, Order.order_date <= end_date) \
+     .group_by('period').order_by('period').all()
+    
+    # Get packaging costs by time period
+    packaging_cost_data = db.session.query(
+        date_extract.label('period'),
         func.sum(OrderPackaging.cost_at_time_of_use_cents).label('packaging_cost')
-    ).join(OrderIngredient, Order.id == OrderIngredient.order_id, isouter=True) \
-     .join(OrderPackaging, Order.id == OrderPackaging.order_id, isouter=True) \
+    ).select_from(OrderPackaging).join(Order) \
      .filter(Order.order_date >= start_date, Order.order_date <= end_date) \
      .group_by('period').order_by('period').all()
     
     # Combine data
     trend_data = []
-    cost_by_period = {item.period: (item.ingredient_cost or 0, item.packaging_cost or 0) for item in cost_data}
+    # Create dictionaries for quick lookup
+    ingredient_costs_by_period = {item.period: (item.ingredient_cost or 0) for item in ingredient_cost_data}
+    packaging_costs_by_period = {item.period: (item.packaging_cost or 0) for item in packaging_cost_data}
     
     for item in revenue_data:
         period = item.period
         revenue = item.revenue
-        ingredient_cost, packaging_cost = cost_by_period.get(period, (0, 0))
+        ingredient_cost = ingredient_costs_by_period.get(period, 0)
+        packaging_cost = packaging_costs_by_period.get(period, 0)
         total_cost = ingredient_cost + packaging_cost
         profit = revenue - total_cost
         
