@@ -120,3 +120,44 @@
     </div>
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const customerIdSelect = document.getElementById('customer_id');
+    const customerNameInput = document.getElementById('customer_name');
+    const customerTypeSelect = document.getElementById('customer_type');
+    
+    // Function to toggle required fields based on customer selection
+    function toggleCustomerFields() {
+        if (customerIdSelect.value) {
+            // An existing customer is selected, disable name and type fields
+            customerNameInput.disabled = true;
+            customerTypeSelect.disabled = true;
+            customerNameInput.required = false;
+            customerTypeSelect.required = false;
+            
+            // Add a visual indication that fields are disabled
+            customerNameInput.parentNode.classList.add('opacity-50');
+            customerTypeSelect.parentNode.classList.add('opacity-50');
+        } else {
+            // No customer selected, enable and require name and type fields
+            customerNameInput.disabled = false;
+            customerTypeSelect.disabled = false;
+            customerNameInput.required = true;
+            customerTypeSelect.required = true;
+            
+            // Remove visual indication
+            customerNameInput.parentNode.classList.remove('opacity-50');
+            customerTypeSelect.parentNode.classList.remove('opacity-50');
+        }
+    }
+    
+    // Add event listener to customer selection dropdown
+    customerIdSelect.addEventListener('change', toggleCustomerFields);
+    
+    // Initialize fields on page load
+    toggleCustomerFields();
+});
+</script>
+{% endblock %}

@@ -33,9 +33,14 @@ def new_order_step2():
     customer_name = request.form.get('customer_name')
     customer_type = request.form.get('customer_type')
     
-    # Handle customer creation if needed
-    if not customer_id and customer_name and customer_type:
-        # Check if we need to create a new customer
+    # Handle customer selection or creation
+    if customer_id:
+        # If customer_id is provided, we're using an existing customer
+        customer = Customer.query.get_or_404(customer_id)
+        customer_name = customer.name
+        customer_type = customer.customer_type
+    elif customer_name and customer_type:
+        # Create a new customer if name and type are provided but no ID
         customer = Customer(
             name=customer_name,
             customer_type=customer_type
@@ -43,6 +48,10 @@ def new_order_step2():
         db.session.add(customer)
         db.session.commit()
         customer_id = customer.id
+    else:
+        # Neither a valid customer ID nor name/type was provided
+        flash('Please select an existing customer or provide name and type for a new customer.', 'danger')
+        return redirect(url_for('orders.new_order_step1'))
     
     form_data = {
         'customer_id': customer_id,
