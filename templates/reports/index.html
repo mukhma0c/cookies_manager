@@ -124,7 +124,7 @@
                             <tbody>
                                 {% for customer in top_customers %}
                                     <tr>
-                                        <td>{{ customer.display_name }}</td>
+                                        <td>{{ customer.name }}</td>
                                         <td>{{ customer.order_count }}</td>
                                         <td>${{ (customer.revenue / 100)|round(2) }}</td>
                                     </tr>

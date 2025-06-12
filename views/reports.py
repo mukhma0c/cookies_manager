@@ -39,7 +39,7 @@ def index():
     
     # Top customers
     top_customers = db.session.query(
-        Customer.display_name,
+        Customer.name,
         func.count(Order.id).label('order_count'),
         func.sum(Order.sale_price_total_cents).label('revenue')
     ).join(Order).group_by(Customer.id).order_by(desc('revenue')).limit(5).all()

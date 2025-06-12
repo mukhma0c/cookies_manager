@@ -83,7 +83,7 @@
                                 <div class="accordion-body">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <p class="mb-1"><strong>Customer:</strong> {{ customer.display_name if customer else 'N/A' }}</p>
+                                            <p class="mb-1"><strong>Customer:</strong> {{ customer.name if customer else 'N/A' }}</p>
                                             <p class="mb-1"><strong>Order Date:</strong> {{ now().strftime('%Y-%m-%d') }}</p>
                                         </div>
                                         <div class="col-md-6">
