@@ -334,6 +334,8 @@ def create_order():
         snapshot_order_costs(order, ingredients, packaging)
         
         db.session.commit()
+        # Clear the order wizard data from the session
+        session.pop('order_wizard', None)
         flash('Order created successfully!', 'success')
         return redirect(url_for('orders.list_orders'))
         
