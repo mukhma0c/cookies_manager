@@ -14,18 +14,21 @@ def index():
     # Get summary metrics
     orders_count = Order.query.count()
     
-    # Profit calculations
-    profit_data = db.session.query(
-        func.sum(Order.sale_price_total_cents).label('total_revenue'),
-        func.sum(OrderIngredient.cost_at_time_of_use_cents).label('total_ingredient_cost'),
-        func.sum(OrderPackaging.cost_at_time_of_use_cents).label('total_packaging_cost')
-    ).join(OrderIngredient, Order.id == OrderIngredient.order_id, isouter=True) \
-     .join(OrderPackaging, Order.id == OrderPackaging.order_id, isouter=True) \
-     .first()
+    # Profit calculations - use separate queries to avoid duplication
+    # Get total revenue
+    total_revenue_cents = db.session.query(func.sum(Order.sale_price_total_cents)).scalar() or 0
     
-    total_revenue_cents = profit_data.total_revenue or 0
-    total_ingredient_cost_cents = profit_data.total_ingredient_cost or 0
-    total_packaging_cost_cents = profit_data.total_packaging_cost or 0
+    # Get total ingredient costs
+    total_ingredient_cost_cents = db.session.query(
+        func.sum(OrderIngredient.cost_at_time_of_use_cents)
+    ).scalar() or 0
+    
+    # Get total packaging costs
+    total_packaging_cost_cents = db.session.query(
+        func.sum(OrderPackaging.cost_at_time_of_use_cents)
+    ).scalar() or 0
+    
+    # Calculate totals
     total_cost_cents = total_ingredient_cost_cents + total_packaging_cost_cents
     total_profit_cents = total_revenue_cents - total_cost_cents
     
@@ -80,26 +83,58 @@ def profit_report():
     elif period == 'year':
         start_date = today.replace(month=1, day=1)
     
-    # Base query
-    query = db.session.query(
-        Order,
-        func.sum(OrderIngredient.cost_at_time_of_use_cents).label('ingredient_cost'),
-        func.sum(OrderPackaging.cost_at_time_of_use_cents).label('packaging_cost')
-    ).join(OrderIngredient, Order.id == OrderIngredient.order_id, isouter=True) \
-     .join(OrderPackaging, Order.id == OrderPackaging.order_id, isouter=True) \
-     .group_by(Order.id)
-    
-    # Apply date filters if specified
+    # Get orders
+    orders_query = Order.query
     if start_date:
-        query = query.filter(Order.order_date >= start_date, Order.order_date <= end_date)
+        orders_query = orders_query.filter(Order.order_date >= start_date, Order.order_date <= end_date)
+    orders = orders_query.order_by(Order.order_date.desc()).all()
     
-    # Execute query
-    orders = query.order_by(Order.order_date.desc()).all()
+    # Initialize totals
+    total_revenue = 0
+    total_ingredient_cost = 0
+    total_packaging_cost = 0
+    orders_data = []
     
-    # Calculate profit metrics
-    total_revenue = sum(order.Order.sale_price_total_cents for order in orders)
-    total_ingredient_cost = sum(order.ingredient_cost or 0 for order in orders)
-    total_packaging_cost = sum(order.packaging_cost or 0 for order in orders)
+    # Process each order
+    for order in orders:
+        # Get ingredient costs for this order
+        ingredient_cost = db.session.query(
+            func.sum(OrderIngredient.cost_at_time_of_use_cents)
+        ).filter(OrderIngredient.order_id == order.id).scalar() or 0
+        
+        # Get packaging costs for this order
+        packaging_cost = db.session.query(
+            func.sum(OrderPackaging.cost_at_time_of_use_cents)
+        ).filter(OrderPackaging.order_id == order.id).scalar() or 0
+        
+        # Calculate profit
+        total_cost = ingredient_cost + packaging_cost
+        profit = order.sale_price_total_cents - total_cost
+        profit_margin_pct = 0
+        if order.sale_price_total_cents > 0:
+            profit_margin_pct = (profit / order.sale_price_total_cents) * 100
+        
+        # Add to totals
+        total_revenue += order.sale_price_total_cents
+        total_ingredient_cost += ingredient_cost
+        total_packaging_cost += packaging_cost
+        
+        # Add to orders data
+        orders_data.append({
+            'id': order.id,
+            'date': order.order_date,
+            'customer': order.customer,
+            'recipe': order.recipe.name if order.recipe else 'Custom',
+            'quantity': order.quantity_baked,
+            'revenue_cents': order.sale_price_total_cents,
+            'ingredient_cost_cents': ingredient_cost,
+            'packaging_cost_cents': packaging_cost,
+            'total_cost_cents': total_cost,
+            'profit_cents': profit,
+            'profit_margin': profit_margin_pct
+        })
+    
+    # Calculate totals
     total_cost = total_ingredient_cost + total_packaging_cost
     total_profit = total_revenue - total_cost
     
@@ -345,13 +380,19 @@ def api_trend_data():
     ).filter(Order.order_date >= start_date, Order.order_date <= end_date) \
      .group_by('period').order_by('period').all()
     
-    # Get costs by time period
-    cost_data = db.session.query(
+    # Get ingredient costs by time period
+    ingredient_cost_data = db.session.query(
         date_extract.label('period'),
-        func.sum(OrderIngredient.cost_at_time_of_use_cents).label('ingredient_cost'),
+        func.sum(OrderIngredient.cost_at_time_of_use_cents).label('ingredient_cost')
+    ).select_from(OrderIngredient).join(Order) \
+     .filter(Order.order_date >= start_date, Order.order_date <= end_date) \
+     .group_by('period').order_by('period').all()
+    
+    # Get packaging costs by time period
+    packaging_cost_data = db.session.query(
+        date_extract.label('period'),
         func.sum(OrderPackaging.cost_at_time_of_use_cents).label('packaging_cost')
-    ).join(OrderIngredient, Order.id == OrderIngredient.order_id, isouter=True) \
-     .join(OrderPackaging, Order.id == OrderPackaging.order_id, isouter=True) \
+    ).select_from(OrderPackaging).join(Order) \
      .filter(Order.order_date >= start_date, Order.order_date <= end_date) \
      .group_by('period').order_by('period').all()
     
@@ -370,13 +411,15 @@ def api_trend_data():
     cookies = []
     
     # Create dictionaries for quick lookup
-    cost_by_period = {item.period: (item.ingredient_cost or 0, item.packaging_cost or 0) for item in cost_data}
+    ingredient_costs_by_period = {item.period: (item.ingredient_cost or 0) for item in ingredient_cost_data}
+    packaging_costs_by_period = {item.period: (item.packaging_cost or 0) for item in packaging_cost_data}
     cookies_by_period = {item.period: item.cookies for item in cookie_data}
     
     for item in revenue_data:
         period = item.period
         rev = item.revenue or 0
-        ingredient_cost, packaging_cost = cost_by_period.get(period, (0, 0))
+        ingredient_cost = ingredient_costs_by_period.get(period, 0)
+        packaging_cost = packaging_costs_by_period.get(period, 0)
         total_cost = ingredient_cost + packaging_cost
         profit = rev - total_cost
         cookie_count = cookies_by_period.get(period, 0)
