@@ -143,32 +143,6 @@ def profit_report():
     if total_revenue > 0:
         profit_margin = (total_profit / total_revenue) * 100
     
-    # Format data for the template
-    orders_data = []
-    for item in orders:
-        order = item.Order
-        ingredient_cost = item.ingredient_cost or 0
-        packaging_cost = item.packaging_cost or 0
-        total_cost = ingredient_cost + packaging_cost
-        profit = order.sale_price_total_cents - total_cost
-        profit_margin_pct = 0
-        if order.sale_price_total_cents > 0:
-            profit_margin_pct = (profit / order.sale_price_total_cents) * 100
-        
-        orders_data.append({
-            'id': order.id,
-            'date': order.order_date,
-            'customer': order.customer.name if order.customer else 'N/A',
-            'recipe': order.recipe.name if order.recipe else 'Custom',
-            'quantity': order.quantity_baked,
-            'revenue_cents': order.sale_price_total_cents,
-            'ingredient_cost_cents': ingredient_cost,
-            'packaging_cost_cents': packaging_cost,
-            'total_cost_cents': total_cost,
-            'profit_cents': profit,
-            'profit_margin': profit_margin_pct
-        })
-    
     return render_template('reports/profit.html',
                           orders=orders_data,
                           period=period,
