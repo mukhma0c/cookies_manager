@@ -1,0 +1,18 @@
+[Unit]
+Description=Cookie Manager Gunicorn service
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/path/to/cookiemgr
+Environment="PATH=/path/to/cookiemgr/venv/bin"
+Environment="FLASK_CONFIG=production"
+Environment="SECRET_KEY=your-super-secure-secret-key"
+ExecStart=/path/to/cookiemgr/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 'app:create_app()'
+Restart=always
+RestartSec=5
+SyslogIdentifier=cookiemgr
+
+[Install]
+WantedBy=multi-user.target

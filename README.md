@@ -10,7 +10,8 @@ A web application for managing cookie baking operations, including order trackin
 - Cost calculation and profit analysis
 - Customer management
 - Purchase logging
-- Reporting and analytics
+- Reporting and analytics with CSV export
+- Accessibility features including high contrast mode
 
 ## Setup
 
@@ -70,4 +71,51 @@ pytest
 
 ## Production Deployment
 
-See the deployment section in the technical specification document.
+For production deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
+### Key Components
+
+- **Nginx**: Serves as a reverse proxy and handles SSL termination
+- **Gunicorn**: WSGI application server for running the Flask application
+- **Systemd**: Manages the application service for auto-restart
+- **Automated Backups**: Daily backups of database and static files
+
+## Project Structure
+
+```
+cookiemgr/
+├── app.py                 # Application entry point
+├── config.py              # Configuration settings
+├── models.py              # Database models
+├── cost_helpers.py        # Cost calculation utilities
+├── migrations/            # Database migrations
+├── scheduled_jobs.py      # Scheduled background tasks
+├── seed.py                # Initial data seeding
+├── static/                # Static assets
+│   ├── css/               # CSS stylesheets
+│   └── img/               # Uploaded images
+├── templates/             # Jinja2 templates
+│   ├── dashboard/         # Dashboard views
+│   ├── inventory/         # Inventory management
+│   ├── orders/            # Order processing
+│   ├── purchases/         # Purchase tracking
+│   ├── recipes/           # Recipe management
+│   └── reports/           # Reporting and analytics
+├── views/                 # Blueprint controllers
+│   ├── dashboard.py       # Dashboard routes
+│   ├── inventory.py       # Inventory routes
+│   ├── orders.py          # Order routes
+│   ├── purchases.py       # Purchase routes
+│   ├── recipes.py         # Recipe routes
+│   └── reports.py         # Reporting routes
+├── tests/                 # Test suite
+├── backup.sh              # Backup script
+├── cookiemgr.service      # Systemd service file
+├── nginx_cookiemgr.conf   # Nginx configuration
+├── requirements.txt       # Python dependencies
+└── README.md              # This file
+```
+
+## License
+
+[MIT License](LICENSE)
