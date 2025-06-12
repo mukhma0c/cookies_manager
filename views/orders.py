@@ -25,42 +25,52 @@ def new_order_step1():
                           recipes=recipes,
                           preselected_recipe_id=preselected_recipe_id)
 
-@orders_bp.route('/new/step2', methods=['POST'])
+@orders_bp.route('/new/step2', methods=['GET', 'POST'])
 def new_order_step2():
     """Step 2 of the order wizard: Ingredients selection."""
-    # Get form data from step 1
-    customer_id = request.form.get('customer_id', type=int)
-    customer_name = request.form.get('customer_name')
-    customer_type = request.form.get('customer_type')
-    
-    # Handle customer selection or creation
-    if customer_id:
-        # If customer_id is provided, we're using an existing customer
-        customer = Customer.query.get_or_404(customer_id)
-        customer_name = customer.name
-        customer_type = customer.customer_type
-    elif customer_name and customer_type:
-        # Create a new customer if name and type are provided but no ID
-        customer = Customer(
-            name=customer_name,
-            customer_type=customer_type
-        )
-        db.session.add(customer)
-        db.session.commit()
-        customer_id = customer.id
+    if request.method == 'POST':
+        # Get form data from step 1
+        customer_id = request.form.get('customer_id', type=int)
+        customer_name = request.form.get('customer_name')
+        customer_type = request.form.get('customer_type')
+        
+        # Handle customer selection or creation
+        if customer_id:
+            # If customer_id is provided, we're using an existing customer
+            customer = Customer.query.get_or_404(customer_id)
+            customer_name = customer.name
+            customer_type = customer.customer_type
+        elif customer_name and customer_type:
+            # Create a new customer if name and type are provided but no ID
+            customer = Customer(
+                name=customer_name,
+                customer_type=customer_type
+            )
+            db.session.add(customer)
+            db.session.commit()
+            customer_id = customer.id
+        else:
+            # Neither a valid customer ID nor name/type was provided
+            flash('Please select an existing customer or provide name and type for a new customer.', 'danger')
+            return redirect(url_for('orders.new_order_step1'))
+        
+        form_data = {
+            'customer_id': customer_id,
+            'customer_name': customer_name,
+            'customer_type': customer_type,
+            'recipe_id': request.form.get('recipe_id', type=int),
+            'cookie_size': request.form.get('cookie_size'),
+            'quantity_ordered': request.form.get('quantity_ordered', type=int, default=0)
+        }
+        
+        # Store in session for later steps
+        session['order_wizard'] = form_data
     else:
-        # Neither a valid customer ID nor name/type was provided
-        flash('Please select an existing customer or provide name and type for a new customer.', 'danger')
-        return redirect(url_for('orders.new_order_step1'))
-    
-    form_data = {
-        'customer_id': customer_id,
-        'customer_name': customer_name,
-        'customer_type': customer_type,
-        'recipe_id': request.form.get('recipe_id', type=int),
-        'cookie_size': request.form.get('cookie_size'),
-        'quantity_ordered': request.form.get('quantity_ordered', type=int, default=0)
-    }
+        # GET request - get data from session
+        form_data = session.get('order_wizard', {})
+        if not form_data:
+            flash('Please start from the beginning of the order wizard.', 'warning')
+            return redirect(url_for('orders.new_order_step1'))
     
     # Store in session for later steps
     session['order_wizard'] = form_data
@@ -87,72 +97,93 @@ def new_order_step2():
                           recipe=recipe, 
                           form_data=form_data)
 
-@orders_bp.route('/new/step3', methods=['POST'])
+@orders_bp.route('/new/step3', methods=['GET', 'POST'])
 def new_order_step3():
     """Step 3 of the order wizard: Bake outcome."""
     # Make Customer model available to the template
     from models import Customer
-    # Get ingredient selections from step 2
-    ingredients = []
-    for key, value in request.form.items():
-        if key.startswith('ingredient_amount_') and float(value) > 0:
-            ingredient_id = int(key.replace('ingredient_amount_', ''))
-            ingredient = Ingredient.query.get(ingredient_id)
-            ingredients.append({
-                'id': ingredient_id,
-                'name': ingredient.name,
-                'amount': float(value),
-                'unit': ingredient.default_unit
-            })
     
-    # Calculate dough weight if recipe was used
-    recipe_id = request.form.get('recipe_id', type=int)
-    dough_weight_g = 0
-    recipe = None
-    
-    if recipe_id:
-        recipe = Recipe.query.get(recipe_id)
-        # Sum the weight of all ingredients
-        for ingredient in ingredients:
-            dough_weight_g += ingredient['amount']
-    
-    # Get other form data
-    form_data = {
-        'customer_id': request.form.get('customer_id', type=int),
-        'customer_name': request.form.get('customer_name'),
-        'customer_type': request.form.get('customer_type'),
-        'recipe_id': recipe_id,
-        'cookie_size': request.form.get('cookie_size'),
-        'quantity_ordered': request.form.get('quantity_ordered', type=int, default=0),
-        'ingredients': ingredients,
-        'dough_weight_g': dough_weight_g
-    }
+    if request.method == 'POST':
+        # Get ingredient selections from step 2
+        ingredients = []
+        for key, value in request.form.items():
+            if key.startswith('ingredient_amount_') and float(value) > 0:
+                ingredient_id = int(key.replace('ingredient_amount_', ''))
+                ingredient = Ingredient.query.get(ingredient_id)
+                ingredients.append({
+                    'id': ingredient_id,
+                    'name': ingredient.name,
+                    'amount': float(value),
+                    'unit': ingredient.default_unit
+                })
+        
+        # Calculate dough weight if recipe was used
+        recipe_id = request.form.get('recipe_id', type=int)
+        dough_weight_g = 0
+        recipe = None
+        
+        if recipe_id:
+            recipe = Recipe.query.get(recipe_id)
+            # Sum the weight of all ingredients
+            for ingredient in ingredients:
+                dough_weight_g += ingredient['amount']
+        
+        # Get other form data
+        form_data = {
+            'customer_id': request.form.get('customer_id', type=int),
+            'customer_name': request.form.get('customer_name'),
+            'customer_type': request.form.get('customer_type'),
+            'recipe_id': recipe_id,
+            'cookie_size': request.form.get('cookie_size'),
+            'quantity_ordered': request.form.get('quantity_ordered', type=int, default=0),
+            'ingredients': ingredients,
+            'dough_weight_g': dough_weight_g
+        }
+        
+        # Update session
+        session['order_wizard'] = form_data
+    else:
+        # GET request - get data from session
+        form_data = session.get('order_wizard', {})
+        if not form_data or 'ingredients' not in form_data:
+            flash('Please complete the previous steps first.', 'warning')
+            return redirect(url_for('orders.new_order_step2'))
     
     # Update session
     session['order_wizard'] = form_data
     
     return render_template('orders/wizard_step3.html', form_data=form_data, Customer=Customer)
 
-@orders_bp.route('/new/step4', methods=['POST'])
+@orders_bp.route('/new/step4', methods=['GET', 'POST'])
 def new_order_step4():
     """Step 4 of the order wizard: Packaging selection."""
-    # Get data from step 3
-    form_data = {
-        'customer_id': request.form.get('customer_id', type=int),
-        'customer_name': request.form.get('customer_name'),
-        'customer_type': request.form.get('customer_type'),
-        'recipe_id': request.form.get('recipe_id', type=int),
-        'cookie_size': request.form.get('cookie_size'),
-        'quantity_ordered': request.form.get('quantity_ordered', type=int, default=0),
-        'quantity_baked': request.form.get('quantity_baked', type=int, default=0),
-        'quantity_kept_family': request.form.get('quantity_kept_family', type=int, default=0),
-        'dough_weight_g': request.form.get('dough_weight_g', type=float, default=0),
-        'sale_price_total_cents': request.form.get('sale_price_total_cents', type=int, default=0)
-    }
-    
-    # Get ingredients from previous step
-    ingredients_data = session.get('order_wizard', {}).get('ingredients', [])
-    form_data['ingredients'] = ingredients_data
+    if request.method == 'POST':
+        # Get data from step 3
+        form_data = {
+            'customer_id': request.form.get('customer_id', type=int),
+            'customer_name': request.form.get('customer_name'),
+            'customer_type': request.form.get('customer_type'),
+            'recipe_id': request.form.get('recipe_id', type=int),
+            'cookie_size': request.form.get('cookie_size'),
+            'quantity_ordered': request.form.get('quantity_ordered', type=int, default=0),
+            'quantity_baked': request.form.get('quantity_baked', type=int, default=0),
+            'quantity_kept_family': request.form.get('quantity_kept_family', type=int, default=0),
+            'dough_weight_g': request.form.get('dough_weight_g', type=float, default=0),
+            'sale_price_total_cents': request.form.get('sale_price_total_cents', type=int, default=0)
+        }
+        
+        # Get ingredients from previous step
+        ingredients_data = session.get('order_wizard', {}).get('ingredients', [])
+        form_data['ingredients'] = ingredients_data
+        
+        # Update session
+        session['order_wizard'] = form_data
+    else:
+        # GET request - get data from session
+        form_data = session.get('order_wizard', {})
+        if not form_data or 'quantity_baked' not in form_data:
+            flash('Please complete the previous steps first.', 'warning')
+            return redirect(url_for('orders.new_order_step3'))
     
     # Get all packaging options
     packaging = Packaging.query.order_by(Packaging.name).all()
@@ -161,38 +192,48 @@ def new_order_step4():
                           packaging=packaging, 
                           form_data=form_data)
 
-@orders_bp.route('/new/step5', methods=['POST'])
+@orders_bp.route('/new/step5', methods=['GET', 'POST'])
 def new_order_step5():
     """Step 5 of the order wizard: Review & Save."""
-    # Get packaging selections from step 4
-    packaging_items = []
-    for key, value in request.form.items():
-        if key.startswith('packaging_quantity_') and float(value) > 0:
-            packaging_id = int(key.replace('packaging_quantity_', ''))
-            packaging = Packaging.query.get(packaging_id)
-            packaging_items.append({
-                'id': packaging_id,
-                'name': packaging.name,
-                'quantity': float(value),
-                'unit': packaging.default_unit
-            })
-    
-    # Get all form data
-    form_data = {
-        'customer_id': request.form.get('customer_id', type=int),
-        'recipe_id': request.form.get('recipe_id', type=int),
-        'cookie_size': request.form.get('cookie_size'),
-        'quantity_ordered': request.form.get('quantity_ordered', type=int, default=0),
-        'quantity_baked': request.form.get('quantity_baked', type=int, default=0),
-        'quantity_kept_family': request.form.get('quantity_kept_family', type=int, default=0),
-        'dough_weight_g': request.form.get('dough_weight_g', type=float, default=0),
-        'packaging': packaging_items,
-        'sale_price_total_cents': request.form.get('sale_price_total_cents', type=int, default=0)
-    }
-    
-    # Get ingredients from session
-    ingredients_data = session.get('order_wizard', {}).get('ingredients', [])
-    form_data['ingredients'] = ingredients_data
+    if request.method == 'POST':
+        # Get packaging selections from step 4
+        packaging_items = []
+        for key, value in request.form.items():
+            if key.startswith('packaging_quantity_') and float(value) > 0:
+                packaging_id = int(key.replace('packaging_quantity_', ''))
+                packaging = Packaging.query.get(packaging_id)
+                packaging_items.append({
+                    'id': packaging_id,
+                    'name': packaging.name,
+                    'quantity': float(value),
+                    'unit': packaging.default_unit
+                })
+        
+        # Get all form data
+        form_data = {
+            'customer_id': request.form.get('customer_id', type=int),
+            'recipe_id': request.form.get('recipe_id', type=int),
+            'cookie_size': request.form.get('cookie_size'),
+            'quantity_ordered': request.form.get('quantity_ordered', type=int, default=0),
+            'quantity_baked': request.form.get('quantity_baked', type=int, default=0),
+            'quantity_kept_family': request.form.get('quantity_kept_family', type=int, default=0),
+            'dough_weight_g': request.form.get('dough_weight_g', type=float, default=0),
+            'packaging': packaging_items,
+            'sale_price_total_cents': request.form.get('sale_price_total_cents', type=int, default=0)
+        }
+        
+        # Get ingredients from session
+        ingredients_data = session.get('order_wizard', {}).get('ingredients', [])
+        form_data['ingredients'] = ingredients_data
+        
+        # Update session
+        session['order_wizard'] = form_data
+    else:
+        # GET request - get data from session
+        form_data = session.get('order_wizard', {})
+        if not form_data or 'ingredients' not in form_data:
+            flash('Please complete the previous steps first.', 'warning')
+            return redirect(url_for('orders.new_order_step4'))
     
     # Get customer and recipe for display
     customer = Customer.query.get(form_data['customer_id']) if form_data['customer_id'] else None
