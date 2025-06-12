@@ -211,6 +211,11 @@ document.addEventListener('DOMContentLoaded', function() {
         input.addEventListener('input', updateCostPreview);
     });
     
+    // Set values from form_data if available
+    {% for pkg in form_data.get('packaging', []) %}
+    document.getElementById('packaging_quantity_{{ pkg.id }}').value = {{ pkg.quantity }};
+    {% endfor %}
+
     // Initial update
     updateCostPreview();
 });
