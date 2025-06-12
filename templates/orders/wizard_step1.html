@@ -42,16 +42,16 @@
                 <form action="{{ url_for('orders.new_order_step2') }}" method="post">
                     <div class="mb-3">
                         <label for="customer_name" class="form-label required-field">Customer Name</label>
-                        <input type="text" class="form-control" id="customer_name" name="customer_name" required>
+                        <input type="text" class="form-control" id="customer_name" name="customer_name" value="{{ form_data.get('customer_name', '') }}" required>
                     </div>
                     
                     <div class="mb-3">
                         <label for="customer_type" class="form-label required-field">Customer Type</label>
                         <select class="form-select" id="customer_type" name="customer_type" required>
                             <option value="">Select customer type</option>
-                            <option value="family">Family</option>
-                            <option value="friend">Friend</option>
-                            <option value="store">Store</option>
+                            <option value="family" {% if form_data.get('customer_type') == 'family' %}selected{% endif %}>Family</option>
+                            <option value="friend" {% if form_data.get('customer_type') == 'friend' %}selected{% endif %}>Friend</option>
+                            <option value="store" {% if form_data.get('customer_type') == 'store' %}selected{% endif %}>Store</option>
                         </select>
                         <div class="form-text">Categorize this customer for reporting purposes.</div>
                     </div>
@@ -61,7 +61,7 @@
                         <select class="form-select" id="customer_id" name="customer_id">
                             <option value="">New customer</option>
                             {% for customer in customers %}
-                                <option value="{{ customer.id }}">{{ customer.name }} ({{ customer.customer_type|capitalize }})</option>
+                                <option value="{{ customer.id }}" {% if form_data.get('customer_id') == customer.id %}selected{% endif %}>{{ customer.name }} ({{ customer.customer_type|capitalize }})</option>
                             {% endfor %}
                         </select>
                         <div class="form-text">Leave empty and fill the fields above to create a new customer.</div>
@@ -81,16 +81,16 @@
                     <div class="mb-3">
                         <label for="cookie_size" class="form-label required-field">Cookie Size</label>
                         <select class="form-select" id="cookie_size" name="cookie_size" required>
-                            <option value="mini">Mini</option>
-                            <option value="regular" selected>Regular</option>
-                            <option value="large">Large</option>
+                            <option value="mini" {% if form_data.get('cookie_size') == 'mini' %}selected{% endif %}>Mini</option>
+                            <option value="regular" {% if not form_data.get('cookie_size') or form_data.get('cookie_size') == 'regular' %}selected{% endif %}>Regular</option>
+                            <option value="large" {% if form_data.get('cookie_size') == 'large' %}selected{% endif %}>Large</option>
                         </select>
                     </div>
                     
                     <div class="mb-3">
                         <label for="quantity_ordered" class="form-label required-field">Quantity Ordered</label>
                         <div class="input-group">
-                            <input type="number" class="form-control" id="quantity_ordered" name="quantity_ordered" min="1" required>
+                            <input type="number" class="form-control" id="quantity_ordered" name="quantity_ordered" min="1" value="{{ form_data.get('quantity_ordered', '') }}" required>
                             <span class="input-group-text">cookies</span>
                         </div>
                     </div>

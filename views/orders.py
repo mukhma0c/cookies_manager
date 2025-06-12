@@ -20,10 +20,14 @@ def new_order_step1():
     # Pre-select recipe if provided in query string
     preselected_recipe_id = request.args.get('recipe_id', type=int)
     
+    # Get data from session if available
+    form_data = session.get('order_wizard', {})
+    
     return render_template('orders/wizard_step1.html', 
                           customers=customers, 
                           recipes=recipes,
-                          preselected_recipe_id=preselected_recipe_id)
+                          preselected_recipe_id=preselected_recipe_id,
+                          form_data=form_data)
 
 @orders_bp.route('/new/step2', methods=['GET', 'POST'])
 def new_order_step2():

@@ -33,6 +33,8 @@ def create_app(config_name=None):
     
     # Configure session
     app.permanent_session_lifetime = timedelta(days=1)
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
     
     # Initialize extensions
     db.init_app(app)
