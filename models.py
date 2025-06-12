@@ -49,8 +49,8 @@ class Customer(db.Model):
     __tablename__ = 'customers'
     
     id = db.Column(db.Integer, primary_key=True)
-    display_name = db.Column(db.String(100), nullable=False, unique=True)
-    type = db.Column(db.String(10), db.CheckConstraint("type IN ('person', 'store')"))
+    name = db.Column(db.String(100), nullable=False)
+    customer_type = db.Column(db.String(10), db.CheckConstraint("customer_type IN ('family', 'friend', 'store')"), nullable=False)
     phone = db.Column(db.String(20))
     notes = db.Column(db.Text)
     
@@ -58,7 +58,7 @@ class Customer(db.Model):
     orders = db.relationship('Order', back_populates='customer')
     
     def __repr__(self):
-        return f'<Customer {self.display_name}>'
+        return f'<Customer {self.name}>'
 
 
 class Recipe(db.Model):

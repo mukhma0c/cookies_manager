@@ -41,7 +41,8 @@
                 <div class="row mb-4">
                     <div class="col-md-6">
                         <h6>Customer Information</h6>
-                        <p class="mb-1"><strong>Customer:</strong> {{ order.customer.display_name if order.customer else 'N/A' }}</p>
+                        <p class="mb-1"><strong>Customer:</strong> {{ order.customer.name if order.customer else 'N/A' }}</p>
+                        <p class="mb-1"><strong>Customer Type:</strong> {{ order.customer.customer_type|capitalize if order.customer else 'N/A' }}</p>
                         <p class="mb-1"><strong>Order Date:</strong> {{ order.order_date.strftime('%Y-%m-%d %H:%M') }}</p>
                         <p class="mb-1"><strong>Recipe:</strong> {{ order.recipe.name if order.recipe else 'Custom Order' }}</p>
                     </div>

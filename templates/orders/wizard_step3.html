@@ -104,7 +104,9 @@
                     <h6>Order Details</h6>
                     <p class="mb-1">Customer: <strong id="customerName">
                         {% if form_data.customer_id %}
-                            {{ Customer.query.get(form_data.customer_id).display_name }}
+                            {{ Customer.query.get(form_data.customer_id).name }}
+                        {% elif form_data.customer_name %}
+                            {{ form_data.customer_name }} ({{ form_data.customer_type|capitalize }})
                         {% else %}
                             Not selected
                         {% endif %}

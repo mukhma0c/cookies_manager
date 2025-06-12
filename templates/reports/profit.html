@@ -188,7 +188,7 @@
                         {% for order in orders %}
                             <tr>
                                 <td>{{ order.date.strftime('%Y-%m-%d') }}</td>
-                                <td>{{ order.customer }}</td>
+                                <td>{{ order.customer }} <span class="badge bg-secondary">{{ order.customer_type|capitalize }}</span></td>
                                 <td>{{ order.recipe }}</td>
                                 <td>{{ order.quantity }}</td>
                                 <td>${{ (order.revenue_cents / 100)|round(2) }}</td>

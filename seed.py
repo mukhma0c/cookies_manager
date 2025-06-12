@@ -13,9 +13,9 @@ def seed_database():
     
     # Add customers
     customers = [
-        Customer(display_name="Family", type="person", notes="Family members"),
-        Customer(display_name="Friends", type="person", notes="Close friends"),
-        Customer(display_name="Local Store", type="store", phone="555-1234", notes="Village grocery store")
+        Customer(name="Smith Family", customer_type="family", notes="Regular customers"),
+        Customer(name="Jane Doe", customer_type="friend", notes="Close friend"),
+        Customer(name="Downtown Bakery", customer_type="store", phone="555-1234", notes="Village grocery store")
     ]
     db.session.add_all(customers)
     db.session.commit()

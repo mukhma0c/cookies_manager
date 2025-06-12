@@ -41,13 +41,30 @@
             <div class="card-body">
                 <form action="{{ url_for('orders.new_order_step2') }}" method="post">
                     <div class="mb-3">
-                        <label for="customer_id" class="form-label required-field">Customer</label>
-                        <select class="form-select" id="customer_id" name="customer_id" required>
-                            <option value="">Select a customer</option>
+                        <label for="customer_name" class="form-label required-field">Customer Name</label>
+                        <input type="text" class="form-control" id="customer_name" name="customer_name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="customer_type" class="form-label required-field">Customer Type</label>
+                        <select class="form-select" id="customer_type" name="customer_type" required>
+                            <option value="">Select customer type</option>
+                            <option value="family">Family</option>
+                            <option value="friend">Friend</option>
+                            <option value="store">Store</option>
+                        </select>
+                        <div class="form-text">Categorize this customer for reporting purposes.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="customer_id" class="form-label">Or select existing customer</label>
+                        <select class="form-select" id="customer_id" name="customer_id">
+                            <option value="">New customer</option>
                             {% for customer in customers %}
-                                <option value="{{ customer.id }}">{{ customer.display_name }}</option>
+                                <option value="{{ customer.id }}">{{ customer.name }} ({{ customer.customer_type|capitalize }})</option>
                             {% endfor %}
                         </select>
+                        <div class="form-text">Leave empty and fill the fields above to create a new customer.</div>
                     </div>
                     
                     <div class="mb-3">

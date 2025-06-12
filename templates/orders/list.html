@@ -65,7 +65,7 @@
                         {% for order in orders %}
                             <tr>
                                 <td>{{ order.order_date.strftime('%Y-%m-%d') }}</td>
-                                <td>{{ order.customer.display_name if order.customer else 'N/A' }}</td>
+                                <td>{{ order.customer.name if order.customer else 'N/A' }}</td>
                                 <td>{{ order.recipe.name if order.recipe else 'Custom' }}</td>
                                 <td>{{ order.quantity_baked }}</td>
                                 <td>${{ '%.2f'|format(order.sale_price_total_cents / 100) }}</td>

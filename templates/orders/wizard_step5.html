@@ -41,6 +41,8 @@
                 <form action="{{ url_for('orders.create_order') }}" method="post">
                     <!-- Hidden fields to carry forward all data -->
                     <input type="hidden" name="customer_id" value="{{ form_data.customer_id }}">
+                    <input type="hidden" name="customer_name" value="{{ form_data.customer_name }}">
+                    <input type="hidden" name="customer_type" value="{{ form_data.customer_type }}">
                     <input type="hidden" name="recipe_id" value="{{ form_data.recipe_id }}">
                     <input type="hidden" name="cookie_size" value="{{ form_data.cookie_size }}">
                     <input type="hidden" name="quantity_ordered" value="{{ form_data.quantity_ordered }}">

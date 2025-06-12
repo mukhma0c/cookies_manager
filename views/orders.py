@@ -29,8 +29,25 @@ def new_order_step1():
 def new_order_step2():
     """Step 2 of the order wizard: Ingredients selection."""
     # Get form data from step 1
+    customer_id = request.form.get('customer_id', type=int)
+    customer_name = request.form.get('customer_name')
+    customer_type = request.form.get('customer_type')
+    
+    # Handle customer creation if needed
+    if not customer_id and customer_name and customer_type:
+        # Check if we need to create a new customer
+        customer = Customer(
+            name=customer_name,
+            customer_type=customer_type
+        )
+        db.session.add(customer)
+        db.session.commit()
+        customer_id = customer.id
+    
     form_data = {
-        'customer_id': request.form.get('customer_id', type=int),
+        'customer_id': customer_id,
+        'customer_name': customer_name,
+        'customer_type': customer_type,
         'recipe_id': request.form.get('recipe_id', type=int),
         'cookie_size': request.form.get('cookie_size'),
         'quantity_ordered': request.form.get('quantity_ordered', type=int, default=0)
@@ -93,6 +110,8 @@ def new_order_step3():
     # Get other form data
     form_data = {
         'customer_id': request.form.get('customer_id', type=int),
+        'customer_name': request.form.get('customer_name'),
+        'customer_type': request.form.get('customer_type'),
         'recipe_id': recipe_id,
         'cookie_size': request.form.get('cookie_size'),
         'quantity_ordered': request.form.get('quantity_ordered', type=int, default=0),
@@ -111,6 +130,8 @@ def new_order_step4():
     # Get data from step 3
     form_data = {
         'customer_id': request.form.get('customer_id', type=int),
+        'customer_name': request.form.get('customer_name'),
+        'customer_type': request.form.get('customer_type'),
         'recipe_id': request.form.get('recipe_id', type=int),
         'cookie_size': request.form.get('cookie_size'),
         'quantity_ordered': request.form.get('quantity_ordered', type=int, default=0),
@@ -186,6 +207,8 @@ def create_order():
     try:
         # Extract data from form
         customer_id = request.form.get('customer_id', type=int)
+        customer_name = request.form.get('customer_name')
+        customer_type = request.form.get('customer_type')
         recipe_id = request.form.get('recipe_id', type=int)
         cookie_size = request.form.get('cookie_size')
         dough_weight_g = request.form.get('dough_weight_g', type=float)
@@ -194,6 +217,17 @@ def create_order():
         quantity_kept_family = request.form.get('quantity_kept_family', type=int, default=0)
         sale_price_total_cents = request.form.get('sale_price_total_cents', type=int)
         notes = request.form.get('notes', '')
+        
+        # Create or get customer if needed
+        if not customer_id and customer_name and customer_type:
+            # Check if we need to create a new customer
+            customer = Customer(
+                name=customer_name,
+                customer_type=customer_type
+            )
+            db.session.add(customer)
+            db.session.flush()  # Get ID without committing
+            customer_id = customer.id
         
         # Create new order
         order = Order(
