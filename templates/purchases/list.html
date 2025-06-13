@@ -77,7 +77,7 @@
                                 </td>
                                 <td>{{ entry.item_name }}</td>
                                 <td>{{ entry.purchase.quantity }} {{ entry.purchase.unit }}</td>
-                                <td>${{ (entry.purchase.unit_cost_cents / 100)|round(2) }}</td>
+                                <td>${{ (entry.purchase.unit_cost_cents / 100000)|round(4) }}</td>
                                 <td>${{ (entry.purchase.total_cost_cents / 100)|round(2) }}</td>
                                 <td>
                                     <div class="btn-group btn-group-sm">

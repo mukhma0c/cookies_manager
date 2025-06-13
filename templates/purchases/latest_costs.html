@@ -113,7 +113,7 @@
                                 <td>{{ entry.item.default_unit }}</td>
                                 <td>
                                     {% if entry.latest_purchase %}
-                                        <strong>${{ (entry.unit_cost_cents / 100)|round(4) }}</strong> per {{ entry.item.default_unit }}
+                                        <strong>${{ (entry.unit_cost_cents / 100000)|round(4) }}</strong> per {{ entry.item.default_unit }}
                                     {% else %}
                                         <span class="text-muted">No purchase data</span>
                                     {% endif %}

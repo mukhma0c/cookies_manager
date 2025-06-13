@@ -256,7 +256,9 @@ function updateUnitCostPreview() {
         previewTotalCost.textContent = '$' + totalCost.toFixed(2);
         previewQuantity.textContent = quantity.toString();
         previewUnit.textContent = unit;
+        // Display unit cost in dollars (total cost / quantity)
         previewUnitCost.textContent = '$' + unitCost.toFixed(4);
+        // Note: This will be stored as millicents (unitCost * 1000) in the database
         previewUnit2.textContent = unit;
         
         previewDiv.classList.remove('d-none');

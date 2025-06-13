@@ -60,7 +60,7 @@ def test_data(app):
             unit='g',
             total_cost_cents=4000  # $40.00
         )
-        flour_purchase.calculate_unit_cost()  # 4 cents per gram
+        flour_purchase.calculate_unit_cost()  # 4000 millicents per gram (4 cents)
         
         sugar_purchase = Purchase(
             item_type='ingredient',
@@ -69,7 +69,7 @@ def test_data(app):
             unit='g',
             total_cost_cents=3500  # $35.00
         )
-        sugar_purchase.calculate_unit_cost()  # 7 cents per gram
+        sugar_purchase.calculate_unit_cost()  # 7000 millicents per gram (7 cents)
         
         box_purchase = Purchase(
             item_type='packaging',
@@ -78,7 +78,7 @@ def test_data(app):
             unit='pcs',
             total_cost_cents=400  # $4.00
         )
-        box_purchase.calculate_unit_cost()  # 40 cents per piece
+        box_purchase.calculate_unit_cost()  # 40000 millicents per piece (40 cents)
         
         db.session.add_all([flour_purchase, sugar_purchase, box_purchase])
         db.session.commit()
@@ -95,14 +95,14 @@ def test_get_latest_unit_cost(app, test_data):
     with app.app_context():
         # Test ingredient cost
         flour_cost = get_latest_unit_cost('ingredient', test_data['flour'].id)
-        assert flour_cost == 4  # 4 cents per gram
+        assert flour_cost == 4000  # 4000 millicents per gram (4 cents)
         
         sugar_cost = get_latest_unit_cost('ingredient', test_data['sugar'].id)
-        assert sugar_cost == 7  # 7 cents per gram
+        assert sugar_cost == 7000  # 7000 millicents per gram (7 cents)
         
         # Test packaging cost
         box_cost = get_latest_unit_cost('packaging', test_data['box'].id)
-        assert box_cost == 40  # 40 cents per piece
+        assert box_cost == 40000  # 40000 millicents per piece (40 cents)
         
         # Test non-existent item
         nonexistent_cost = get_latest_unit_cost('ingredient', 999)
