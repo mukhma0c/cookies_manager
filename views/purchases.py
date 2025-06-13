@@ -155,10 +155,11 @@ def latest_costs():
     ingredients = Ingredient.query.order_by(Ingredient.name).all()
     
     for ingredient in ingredients:
+        # Filter out zero-cost purchases (like inventory adjustments)
         latest_purchase = Purchase.query.filter_by(
             item_type='ingredient',
             item_id=ingredient.id
-        ).order_by(Purchase.purchase_date.desc()).first()
+        ).filter(Purchase.unit_cost_cents > 0).order_by(Purchase.purchase_date.desc()).first()
         
         ingredient_costs.append({
             'item': ingredient,
@@ -172,10 +173,11 @@ def latest_costs():
     packaging_items = Packaging.query.order_by(Packaging.name).all()
     
     for packaging in packaging_items:
+        # Filter out zero-cost purchases (like inventory adjustments)
         latest_purchase = Purchase.query.filter_by(
             item_type='packaging',
             item_id=packaging.id
-        ).order_by(Purchase.purchase_date.desc()).first()
+        ).filter(Purchase.unit_cost_cents > 0).order_by(Purchase.purchase_date.desc()).first()
         
         packaging_costs.append({
             'item': packaging,
