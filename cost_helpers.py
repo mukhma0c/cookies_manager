@@ -14,10 +14,24 @@ def get_latest_unit_cost(item_type, item_id):
         int: Latest unit cost in millicents, or None if no purchase exists
             (Note: 1 cent = 1000 millicents)
     """
+    # Filter out zero-cost purchases (like inventory adjustments)
     latest_purchase = Purchase.query.filter_by(
         item_type=item_type,
         item_id=item_id
-    ).order_by(Purchase.purchase_date.desc()).first()
+    ).filter(Purchase.unit_cost_cents > 0).order_by(Purchase.purchase_date.desc()).first()
+    
+    # If no non-zero cost purchase found, use default price from item
+    if not latest_purchase:
+        if item_type == 'ingredient':
+            item = Ingredient.query.get(item_id)
+            if item and item.default_price_per_unit_cents:
+                # Convert default price to millicents
+                return item.default_price_per_unit_cents * 1000
+        elif item_type == 'packaging':
+            item = Packaging.query.get(item_id)
+            if item and item.default_price_per_unit_cents:
+                # Convert default price to millicents
+                return item.default_price_per_unit_cents * 1000
     
     return latest_purchase.unit_cost_cents if latest_purchase else None
 
@@ -35,13 +49,7 @@ def calculate_ingredient_cost(ingredient_id, amount):
     """
     unit_cost_millicents = get_latest_unit_cost('ingredient', ingredient_id)
     if unit_cost_millicents is None:
-        # Fallback to default price if no purchase exists
-        ingredient = Ingredient.query.get(ingredient_id)
-        if ingredient and ingredient.default_price_per_unit_cents:
-            # Convert default price (cents) to millicents for consistent calculation
-            unit_cost_millicents = ingredient.default_price_per_unit_cents * 1000
-        else:
-            return None
+        return None
     
     # Calculate cost in millicents, then convert back to cents
     return int((unit_cost_millicents * amount) / 1000)
@@ -60,13 +68,7 @@ def calculate_packaging_cost(packaging_id, quantity):
     """
     unit_cost_millicents = get_latest_unit_cost('packaging', packaging_id)
     if unit_cost_millicents is None:
-        # Fallback to default price if no purchase exists
-        packaging = Packaging.query.get(packaging_id)
-        if packaging and packaging.default_price_per_unit_cents:
-            # Convert default price (cents) to millicents for consistent calculation
-            unit_cost_millicents = packaging.default_price_per_unit_cents * 1000
-        else:
-            return None
+        return None
     
     # Calculate cost in millicents, then convert back to cents
     return int((unit_cost_millicents * quantity) / 1000)

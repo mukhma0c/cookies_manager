@@ -339,10 +339,10 @@ def process_adjustment():
                         quantity=adjustment,
                         unit=ingredient.default_unit,
                         total_cost_cents=0,  # No cost for adjustments
-                        notes=f"Inventory adjustment: {'Addition' if adjustment > 0 else 'Reduction'}"
+                        notes=f"INVENTORY ADJUSTMENT: {'Addition' if adjustment > 0 else 'Reduction'} (not used for cost calculations)"
                     )
                     
-                    # Set unit cost to 0
+                    # Mark as inventory adjustment with zero cost
                     purchase.unit_cost_cents = 0
                     
                     db.session.add(purchase)
@@ -383,10 +383,10 @@ def process_adjustment():
                         quantity=adjustment,
                         unit=packaging.default_unit,
                         total_cost_cents=0,  # No cost for adjustments
-                        notes=f"Inventory adjustment: {'Addition' if adjustment > 0 else 'Reduction'}"
+                        notes=f"INVENTORY ADJUSTMENT: {'Addition' if adjustment > 0 else 'Reduction'} (not used for cost calculations)"
                     )
                     
-                    # Set unit cost to 0
+                    # Mark as inventory adjustment with zero cost
                     purchase.unit_cost_cents = 0
                     
                     db.session.add(purchase)
