@@ -1,3 +1,6 @@
+# Note
+this is a basic hobby projects that is ment to be deployed on loacl network only and not to be deplyed to the internet as there are not enough security mesures to have this facing the public internet. use at your own risk
+
 # Cookie Manager
 
 A web application for managing cookie baking operations, including order tracking, inventory management, recipe handling, and cost analysis.
