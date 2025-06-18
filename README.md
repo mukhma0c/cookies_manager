@@ -1,5 +1,5 @@
 # Note
-this is a basic hobby projects that is ment to be deployed on loacl network only and not to be deplyed to the internet as there are not enough security mesures to have this facing the public internet. use at your own risk
+this is a basic hobby projects that is ment to be deployed on local network only and not to be deployed to the internet as there are not enough security mesures to have this facing the public internet. use at your own risk
 
 # Cookie Manager
 
